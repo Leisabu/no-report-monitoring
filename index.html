@@ -1,0 +1,1727 @@
+<!-- NO Report Monitoring System -->
+<!-- kakatamad mag excel at mag pivot -->
+<!-- wag na wag gagalawin ever yung mga tags dito kasi dito nakadepende lahat ng structure ng page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NO Report Monitoring</title>
+<!-- kailangan ito dahil dito galing yung PapaParse library, ito yung gumagawa ng pag basa ng CSV file -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<!-- kailangan ito dahil dito galing yung html2canvas, ito yung ginagamit pag mag screenshot/download ng card as image -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!-- for styling lang, mga fonts galing google fonts -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f0f2f5; --card:#ffffff; --surface2:#f5f6fa;
+    --border:#d1d5e0; --border2:#b8bdd0;
+    --primary:#16a34a; --primary-dark:#0f7a37;
+    --accent2:#0891b2; --accent3:#ea6c00; --accent4:#7c3aed;
+    --danger:#e11d48; --success:#16a34a;
+    --text:#1a1d2e; --muted:#4b5068; --text3:#8b90a8;
+    --header-bg:#eef0f6; --header-text:#16a34a;
+    --radius: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; }
+
+  /* ── Header ── */
+  /* for styling lang nung header sa taas, wag na wag gagalawin ever kasi dito nakalagay yung logo at title ng app */
+  .header {
+    background: var(--card); color: var(--text); padding: 0 24px; display: flex; align-items: center; gap: 14px;
+    border-bottom: 1px solid var(--border); height: 64px;
+  }
+  .header-icon { font-size: 26px; }
+  .header h1 { font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -0.3px; color: var(--text); }
+  .header p { font-size: 11.5px; color: var(--text3); margin-top: 2px; font-family: 'DM Mono', monospace; }
+  .header-badge { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); padding: 3px 8px; border: 1px solid var(--border); border-radius: 4px; white-space: nowrap; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+  /* ── Upload Area ── */
+  /* for styling ng upload box, dito lalagay yung CSV file pag drag and drop o pag click */
+  .upload-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 20px; }
+  .upload-zone {
+    border: 2px dashed var(--border2); border-radius: 8px; background: var(--surface2);
+    padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.2s;
+  }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--primary); background: rgba(22,163,74,0.06); }
+  .upload-icon { font-size: 44px; margin-bottom: 12px; }
+  .upload-zone h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .upload-zone p { font-size: 12px; color: var(--text3); font-family: 'DM Mono', monospace; }
+  #fileInput { display: none; }
+  .file-chosen { margin-top: 12px; font-size: 12.5px; color: var(--success); font-weight: 600; font-family: 'DM Mono', monospace; }
+
+  /* Collapsed state: once a file is chosen, shrink the upload zone to a compact bar
+     instead of leaving the large empty-looking dropzone on screen. */
+  .upload-zone.has-file {
+    padding: 12px 16px; text-align: left; display: flex; align-items: center; gap: 10px;
+    border-style: solid;
+  }
+  .upload-zone.has-file .upload-icon { display: none; }
+  .upload-zone.has-file h3 { display: none; }
+  .upload-zone.has-file .file-chosen {
+    margin-top: 0; flex: 1; display: flex; align-items: center; gap: 8px; color: var(--text);
+  }
+  .upload-zone.has-file .file-chosen .fc-name { font-weight: 600; color: var(--text); }
+  .upload-zone.has-file .file-chosen .fc-size { color: var(--text3); }
+  .upload-zone.has-file .file-chosen .fc-change {
+    margin-left: auto; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 11px;
+    color: var(--primary); white-space: nowrap;
+  }
+
+  /* ── Buttons ── */
+  /* for styling ng mga buttons buttons natin, primary green, danger red tska ghost neutral */
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 6px; font-family: 'Syne', sans-serif; font-size: 12.5px; font-weight: 700; letter-spacing: .2px;
+    border: none; cursor: pointer; transition: all 0.15s; text-decoration: none;
+  }
+  .btn-primary { background: var(--primary); color: #ffffff; box-shadow: 0 0 14px rgba(22,163,74,0.18); }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .btn-primary:disabled { background: #a7d8b8; cursor: not-allowed; box-shadow: none; }
+  .btn-danger { background: var(--card); color: var(--danger); border: 1px solid rgba(225,29,72,0.35); }
+  .btn-danger:hover { background: rgba(225,29,72,0.08); transform: translateY(-1px); }
+  /* Neutral "ghost" action button — used for all secondary actions (copy/download/etc) so
+     accent colors are reserved for primary (green) and destructive (red) only. */
+  .btn-ghost, .btn-copy, .btn-dl { background: var(--card); color: var(--muted); border: 1px solid var(--border2); font-size: 12px; padding: 7px 13px; }
+  .btn-ghost:hover, .btn-copy:hover, .btn-dl:hover { background: var(--surface2); color: var(--text); transform: translateY(-1px); }
+  .btn-copy.copied { background: var(--success); color: #fff; border-color: var(--success); }
+
+  /* ── Status / Alert ── */
+  /* ito ang nag papagana ng mga alert box pag may error or success message, for styling lang din */
+  .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px; border: 1px solid var(--border); }
+  .alert-error { background: rgba(225,29,72,0.07); border-color: rgba(225,29,72,0.3); color: #b8123f; }
+  .alert-success { background: rgba(22,163,74,0.07); border-color: rgba(22,163,74,0.3); color: #15803d; }
+  .alert-info { background: rgba(8,145,178,0.07); border-color: rgba(8,145,178,0.3); color: #0e7490; }
+  .alert-icon { font-size: 18px; flex-shrink: 0; }
+
+  /* ── Summary ── */
+  /* for styling ng summary cards sa taas, yung mga stat-card na may number */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; border-top: 3px solid var(--primary); }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 6px; }
+  .stat-value { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 700; color: var(--primary); letter-spacing: -1px; }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* ── Search bar ── */
+  /* for styling ng search bar, kailangan ito dahil dito nag iinput ng AM/Sup name para mag filter */
+  .search-bar { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 18px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+  .search-bar input { flex: 1; border: 1px solid var(--border2); background: var(--surface2); border-radius: 6px; padding: 8px 12px; font-size: 13px; outline: none; transition: border-color 0.15s; color: var(--text); font-family: 'DM Sans', sans-serif; }
+  .search-bar input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(22,163,74,0.12); }
+  .search-icon { font-size: 18px; color: var(--text3); }
+  .results-count { font-size: 12px; color: var(--text3); white-space: nowrap; font-family: 'DM Mono', monospace; }
+
+  /* ── Report Cards Grid ── */
+  /* for styling ng grid layout ng mga report cards, parang grid lang sya gamit CSS grid */
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+  .card-wrapper { display: flex; flex-direction: column; }
+  .rc-actions { display: flex; gap: 8px; padding: 9px 14px; background: var(--surface2); border-top: 1px solid var(--border); }
+
+  /* ── Report Card (pivot-table style) ── */
+  /* for styling ng bawat report card, parang excel pivot table tignan mo */
+  .report-card {
+    background: #ffffff;
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    width: 100%;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+
+  /* Top title bar */
+  .rc-header {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .rc-title-block { display: flex; align-items: center; gap: 8px; }
+  .rc-title-block h2 { font-family: 'Syne', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--header-text); letter-spacing: 0.3px; text-transform: uppercase; margin: 0; }
+  .rc-badge {
+    background: var(--danger); color: white;
+    font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 3px;
+    text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;
+  }
+  .rc-header-date { font-size: 10px; color: var(--text3); font-family: 'DM Mono', monospace; white-space: nowrap; }
+
+  /* Pivot table */
+  .rc-pivot-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .rc-pivot-table thead tr th {
+    background: var(--header-bg);
+    color: var(--header-text);
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 10px;
+    text-align: left;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .rc-pivot-table thead tr th:last-child { border-right: none; }
+  .rc-pivot-table thead tr th .sort-arrow { opacity: 0.6; margin-left: 4px; font-size: 9px; }
+
+  /* Alternating rows */
+  .rc-pivot-table tbody tr:nth-child(odd)  td { background: #ffffff; }
+  .rc-pivot-table tbody tr:nth-child(even) td { background: var(--surface2); }
+
+  .rc-pivot-table tbody tr td {
+    padding: 6px 10px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 12px;
+    vertical-align: middle;
+  }
+  .rc-pivot-table tbody tr td:last-child { border-right: none; }
+  .rc-pivot-table tbody tr:last-child td { border-bottom: none; }
+
+  /* NO Report badge in table */
+  .rc-no-report-pill {
+    display: inline-block;
+    background: rgba(225,29,72,0.08);
+    color: var(--danger);
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid rgba(225,29,72,0.25);
+    white-space: nowrap;
+  }
+
+  /* Grand Total row */
+  .rc-grand-total td {
+    background: var(--surface2) !important;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text);
+    padding: 7px 10px;
+    border-top: 2px solid var(--border2);
+    border-right: 1px solid var(--border);
+  }
+  .rc-grand-total td:last-child { border-right: none; }
+
+  /* Footer */
+  .rc-footer {
+    background: var(--header-bg);
+    border-top: 1px solid var(--border);
+    padding: 7px 12px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .rc-footer-text { font-size: 10px; color: var(--text3); font-family: 'DM Mono', monospace; }
+  .rc-footer-date { font-size: 10px; color: var(--text3); text-align: right; font-family: 'DM Mono', monospace; }
+
+  /* Summary count strip */
+  .rc-count-strip {
+    background: rgba(8,145,178,0.06);
+    border-bottom: 1px solid var(--border);
+    padding: 7px 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .rc-count-num { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 700; color: var(--danger); line-height: 1; }
+  .rc-count-label { font-size: 11px; color: var(--text); }
+  .rc-count-sub { font-size: 10px; color: var(--text3); }
+
+  /* ── Loading spinner ── */
+  /* for styling lang ng loading spinner, yung umiikot pag nag process ng file */
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  .spinner-dark { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(0,0,0,0.15); border-top-color: currentColor; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Misc ── */
+  /* mga miscellaneous styling, dito nilagay yung mga hindi na ma categorize hehe */
+  .hidden { display: none !important; }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty-state .empty-icon { font-size: 56px; margin-bottom: 14px; }
+  .empty-state h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+  .empty-state p { font-family: 'DM Mono', monospace; font-size: 12px; }
+
+  @media (max-width: 600px) {
+    .cards-grid { grid-template-columns: 1fr; }
+    .header h1 { font-size: 16px; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ── AM Breakdown Panel ── */
+  /* for styling ng AM (area manager) breakdown panel, dito makikita yung accordion list */
+  .am-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .am-panel-header {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 13px 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .am-panel-title {
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    color: var(--text); display: flex; align-items: center; gap: 8px;
+  }
+  .am-panel-actions { display: flex; gap: 8px; align-items: center; }
+  .am-panel-actions-divider { width: 1px; height: 18px; background: var(--border); margin: 0 2px; }
+  .btn-copy-am {
+    background: var(--card); color: var(--muted); border: 1px solid var(--border2);
+    font-family: 'Syne', sans-serif; font-size: 11.5px; font-weight: 700;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-copy-am:hover { background: var(--surface2); color: var(--text); transform: translateY(-1px); }
+  .btn-copy-am.copied { background: var(--success); color: #fff; border-color: var(--success); }
+  .btn-expand-all {
+    background: transparent; color: var(--text3); border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    padding: 5px 10px; border-radius: 5px; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-expand-all:hover { background: var(--surface2); color: var(--text); }
+
+  /* AM accordion item */
+  .am-item { border-bottom: 1px solid var(--border); }
+  .am-item:last-child { border-bottom: none; }
+  .am-item-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 18px; cursor: pointer; user-select: none;
+    transition: background 0.12s;
+  }
+  .am-item-header:hover { background: var(--surface2); }
+  .am-chevron {
+    font-size: 11px; color: var(--text3); transition: transform 0.2s;
+    flex-shrink: 0; width: 14px; text-align: center;
+  }
+  .am-item.open .am-chevron { transform: rotate(90deg); }
+  .am-name {
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    color: var(--text); flex: 1;
+  }
+  .am-total-badge {
+    font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700;
+    background: rgba(225,29,72,0.10); color: var(--danger);
+    padding: 3px 10px; border-radius: 20px; border: 1px solid rgba(225,29,72,0.22);
+    white-space: nowrap;
+  }
+  .am-sup-count {
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3);
+    white-space: nowrap;
+  }
+
+  /* Supervisor rows inside accordion */
+  .am-sups {
+    display: none;
+    padding: 4px 0 10px 42px;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+  }
+  .am-item.open .am-sups { display: block; }
+  .am-sup-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 18px 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .am-sup-row:last-child { border-bottom: none; }
+  .am-sup-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent2); flex-shrink: 0;
+  }
+  .am-sup-name { flex: 1; font-size: 12.5px; color: var(--text); }
+  .am-sup-badge {
+    font-family: 'DM Mono', monospace; font-size: 11.5px; font-weight: 700;
+    color: var(--danger); min-width: 28px; text-align: right;
+  }
+  .am-sup-bar-wrap { width: 80px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .am-sup-bar { height: 100%; background: var(--danger); border-radius: 3px; opacity: 0.6; }
+  .am-sup-pct { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); min-width: 34px; text-align: right; }
+
+  /* AM panel total footer */
+  .am-panel-footer {
+    background: var(--header-bg); border-top: 2px solid var(--border2);
+    padding: 9px 18px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .am-panel-footer-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+  .am-panel-footer-val { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 700; color: var(--text); }
+
+  /* PJP ratio badge */
+  .pjp-ratio {
+    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px; border: 1px solid; white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .ratio-low  { background: rgba(22,163,74,0.10);  color: #15803d; border-color: rgba(22,163,74,0.28); }
+  .ratio-mid  { background: rgba(234,108,0,0.10);  color: #c05a00; border-color: rgba(234,108,0,0.28); }
+  .ratio-high { background: rgba(225,29,72,0.10);  color: var(--danger); border-color: rgba(225,29,72,0.28); }
+
+  /* Toggle ratio button */
+  .btn-toggle-ratio {
+    background: transparent; color: var(--text3); border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    padding: 5px 10px; border-radius: 5px; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-toggle-ratio:hover { background: var(--surface2); color: var(--text); }
+  .btn-toggle-ratio.active {
+    background: rgba(75,80,104,0.08); color: var(--text);
+    border-color: var(--border2); font-weight: 700;
+  }
+
+  /* AM item action buttons row */
+  .am-item-actions {
+    display: flex; gap: 6px; padding: 8px 18px 8px 42px;
+    background: var(--surface2); border-top: 1px solid var(--border);
+  }
+  .btn-am-img {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+    padding: 5px 11px; border-radius: 5px; cursor: pointer; transition: all 0.15s; border: 1px solid;
+  }
+  .btn-am-copy-img { background: var(--card); color: var(--muted); border-color: var(--border2); }
+  .btn-am-copy-img:hover { background: var(--surface2); color: var(--text); transform: translateY(-1px); }
+  .btn-am-copy-img.copied { background: var(--success); color: #fff; border-color: var(--success); }
+  .btn-am-copy-img.saved  { background: var(--success); color: #fff; border-color: var(--success); }
+  .btn-am-dl-img  { background: var(--card); color: var(--muted); border-color: var(--border2); }
+  .btn-am-dl-img:hover  { background: var(--surface2); color: var(--text); transform: translateY(-1px); }
+
+  /* AM summary card (rendered offscreen for image export) */
+  .am-summary-card {
+    background: #ffffff; border-radius: 10px; overflow: hidden;
+    font-family: 'DM Sans', sans-serif; border: 1px solid var(--border);
+    box-shadow: var(--shadow); width: 440px;
+  }
+  .am-summary-card .asc-header {
+    background: var(--header-bg); border-bottom: 1px solid var(--border);
+    padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .am-summary-card .asc-title {
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+    color: var(--header-text); text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .am-summary-card .asc-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); }
+  .am-summary-card .asc-am-name {
+    padding: 9px 14px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    color: var(--text); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .am-summary-card .asc-am-badge {
+    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700;
+    background: rgba(225,29,72,0.10); color: var(--danger);
+    padding: 2px 9px; border-radius: 20px; border: 1px solid rgba(225,29,72,0.22);
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .am-summary-card table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .am-summary-card table thead th {
+    background: var(--header-bg); color: var(--header-text);
+    font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 7px 10px; text-align: left;
+    border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
+  .am-summary-card table thead th:last-child { border-right: none; }
+  .am-summary-card table tbody tr:nth-child(odd) td  { background: #fff; }
+  .am-summary-card table tbody tr:nth-child(even) td { background: var(--surface2); }
+  .am-summary-card table tbody td {
+    padding: 6px 10px; border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border); color: var(--text); font-size: 12px;
+  }
+  .am-summary-card table tbody td:last-child { border-right: none; }
+  .am-summary-card table tbody tr:last-child td { border-bottom: none; }
+  .am-summary-card .asc-total-row td {
+    background: var(--surface2) !important; font-weight: 700;
+    border-top: 2px solid var(--border2);
+  }
+  .am-summary-card .asc-footer {
+    background: var(--header-bg); border-top: 1px solid var(--border);
+    padding: 6px 12px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .am-summary-card .asc-footer-text { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); }
+
+  /* Copy-all progress toast */
+  .copy-all-toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: #fff; font-family: 'DM Mono', monospace;
+    font-size: 12px; padding: 10px 20px; border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25); z-index: 9999;
+    display: flex; align-items: center; gap: 10px; white-space: nowrap;
+  }
+  .btn-copy-all-img {
+    background: var(--card); color: var(--muted); border: 1px solid var(--border2);
+    font-family: 'Syne', sans-serif; font-size: 11.5px; font-weight: 700;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-copy-all-img:hover { background: var(--surface2); color: var(--text); transform: translateY(-1px); }
+  .btn-copy-all-img:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── Tip Buttons ── */
+  /* for styling ng mga tip buttons na may popover pag hover, parang tooltip lang */
+  .tip-btn-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+  .tip-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 11px; border-radius: 20px;
+    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+    border: 1px solid; cursor: pointer; transition: all 0.2s;
+    white-space: nowrap; line-height: 1.3;
+    background: var(--card); color: var(--muted); border-color: var(--border2);
+  }
+  .tip-btn:hover { background: var(--surface2); color: var(--text); }
+  .tip-btn.tip-active { background: #fffbeb; color: #92400e; border-color: #fcd34d; }
+  .tip-btn.tip-how { background: var(--card); color: var(--accent4); border-color: rgba(124,58,237,0.35); font-size: 11.5px; padding: 6px 14px; border-radius: 6px; font-family: 'Syne', sans-serif; font-weight: 700; }
+  .tip-btn.tip-how:hover { background: rgba(124,58,237,0.06); }
+  .tip-btn.tip-how.tip-active { background: rgba(124,58,237,0.08); color: var(--accent4); border-color: var(--accent4); }
+
+  .tip-popover {
+    display: none;
+    position: absolute;
+    z-index: 2000;
+    background: #1a1d2e;
+    color: #f0f2f5;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    line-height: 1.6;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+    min-width: 240px;
+    max-width: 340px;
+    pointer-events: none;
+  }
+  .tip-popover.pop-above {
+    bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+  }
+  .tip-popover.pop-below {
+    top: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+  }
+  .tip-popover.pop-left {
+    top: 50%; right: calc(100% + 10px); transform: translateY(-50%);
+  }
+  .tip-btn-wrap:hover .tip-popover,
+  .tip-btn-wrap.tip-open .tip-popover { display: block; }
+
+  .tip-popover-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
+    color: #ffffff; margin-bottom: 7px; display: flex; align-items: center; gap: 6px;
+  }
+  .tip-popover ul { padding-left: 16px; margin: 6px 0 0; }
+  .tip-popover ul li { margin-bottom: 4px; }
+  .tip-popover-arrow {
+    position: absolute; width: 10px; height: 10px;
+    background: #1a1d2e; transform: rotate(45deg);
+  }
+  .pop-above .tip-popover-arrow { bottom: -5px; left: 50%; margin-left: -5px; }
+  .pop-below .tip-popover-arrow { top: -5px; left: 50%; margin-left: -5px; }
+  .pop-left .tip-popover-arrow  { right: -5px; top: 50%; margin-top: -5px; }
+
+  /* How-It-Works modal overlay */
+  .hiw-modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 5000;
+    background: rgba(26,29,46,0.55); backdrop-filter: blur(3px);
+    align-items: center; justify-content: center;
+  }
+  .hiw-modal-overlay.open { display: flex; }
+  .hiw-modal {
+    background: var(--card); border-radius: 14px; max-width: 560px; width: 95%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .hiw-modal-header {
+    background: linear-gradient(135deg, #4c1d95 0%, var(--accent4) 100%);
+    padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .hiw-modal-header h2 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: #fff; margin: 0; }
+  .hiw-modal-close { background: rgba(255,255,255,0.18); border: none; border-radius: 6px; color: #fff; font-size: 16px; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+  .hiw-modal-close:hover { background: rgba(255,255,255,0.32); }
+  .hiw-modal-body { padding: 20px 22px; max-height: 70vh; overflow-y: auto; }
+  .hiw-step { display: flex; gap: 14px; margin-bottom: 18px; align-items: flex-start; }
+  .hiw-step-num {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    background: var(--accent4); color: #fff; font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;
+  }
+  .hiw-step-text h3 { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .hiw-step-text p { font-size: 12.5px; color: var(--muted); line-height: 1.6; margin: 0; }
+  .hiw-step-text p strong { color: var(--text); }
+  .hiw-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+  .hiw-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .hiw-field-chip {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 10px; font-family: 'DM Mono', monospace; font-size: 10.5px;
+    color: var(--muted);
+  }
+  .hiw-field-chip strong { display: block; color: var(--text); font-size: 11px; margin-bottom: 2px; }
+  .hiw-cat-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .hiw-cat-pill {
+    padding: 3px 9px; border-radius: 20px; font-size: 11px;
+    font-family: 'DM Mono', monospace; border: 1px solid; font-weight: 500;
+  }
+  .hiw-modal-footer { background: var(--surface2); border-top: 1px solid var(--border); padding: 12px 22px; text-align: center; }
+  .hiw-modal-footer p { font-size: 11.5px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+  /* tip bar below header */
+  .tip-bar {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 8px 24px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .tip-bar-label { font-family: 'DM Mono', monospace; font-size: 10.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">📋</div>
+  <div>
+    <h1>NO Report Monitoring</h1>
+  </div>
+</div>
+
+<!-- Tip Bar -->
+<div class="tip-bar">
+  <span class="tip-bar-label">💡 Tips</span>
+
+  <!-- Tip 1: Upload -->
+  <div class="tip-btn-wrap">
+    <button class="tip-btn" onclick="toggleTip(this)">📂 Upload</button>
+    <div class="tip-popover pop-below">
+      <div class="tip-popover-arrow"></div>
+      <div class="tip-popover-title">📂 Upload a CSV File</div>
+      Drag &amp; drop your AppSheet export onto the upload zone, or click to browse. Only <strong style="color:#86efac;">.csv</strong> files are accepted.
+    </div>
+  </div>
+
+  <!-- Tip 2: Required Columns -->
+  <div class="tip-btn-wrap">
+    <button class="tip-btn" onclick="toggleTip(this)">📋 Required Columns</button>
+    <div class="tip-popover pop-below">
+      <div class="tip-popover-arrow"></div>
+      <div class="tip-popover-title">📋 Required CSV Columns</div>
+      Your CSV must contain these four columns:<br>
+      <ul>
+        <li><strong style="color:#86efac;">AREA MANAGER</strong></li>
+        <li><strong style="color:#86efac;">SUPERVISOR</strong></li>
+        <li><strong style="color:#86efac;">REFILLER NAME</strong></li>
+        <li><strong style="color:#86efac;">Category</strong></li>
+      </ul>
+      Column names are matched case-insensitively.
+    </div>
+  </div>
+
+  <!-- Tip 3: NO Report filter -->
+  <div class="tip-btn-wrap">
+    <button class="tip-btn" onclick="toggleTip(this)">🔍 Filter Logic</button>
+    <div class="tip-popover pop-below">
+      <div class="tip-popover-arrow"></div>
+      <div class="tip-popover-title">🔍 How Records Are Filtered</div>
+      Only rows where <strong style="color:#fca5a5;">Category = "NO Report"</strong> are shown. All other rows (PRESENT, ABSENT, DAY OFF, etc.) are counted for PJP ratio but not displayed.
+    </div>
+  </div>
+
+  <!-- Tip 4: PJP Ratio -->
+  <div class="tip-btn-wrap">
+    <button class="tip-btn" onclick="toggleTip(this)">🔢 PJP Ratio</button>
+    <div class="tip-popover pop-below">
+      <div class="tip-popover-arrow"></div>
+      <div class="tip-popover-title">🔢 PJP Ratio Explained</div>
+      PJP = Planned Journey Plan. The ratio shows <strong style="color:#fca5a5;">NO Reports ÷ Total PJP visits</strong>.<br><br>
+      🟢 <strong style="color:#86efac;">Low</strong> — under 25%<br>
+      🟠 <strong style="color:#fcd34d;">Moderate</strong> — 25–49%<br>
+      🔴 <strong style="color:#fca5a5;">High</strong> — 50% or more<br><br>
+      Toggle it on/off using the <em>Show PJP Ratio</em> button in the AM Breakdown panel.
+    </div>
+  </div>
+
+  <!-- Tip 5: Export Images -->
+  <div class="tip-btn-wrap">
+    <button class="tip-btn" onclick="toggleTip(this)">🖼️ Export Images</button>
+    <div class="tip-popover pop-below">
+      <div class="tip-popover-arrow"></div>
+      <div class="tip-popover-title">🖼️ Exporting Card Images</div>
+      Each report card can be copied to clipboard or downloaded as a PNG.<br><br>
+      <strong style="color:#93c5fd;">📋 Copy Image</strong> — pastes directly into Viber, Teams, etc.<br>
+      <strong style="color:#93c5fd;">⬇️ Download PNG</strong> — saves to your Downloads folder.<br><br>
+      Use <strong style="color:#93c5fd;">Download All Images</strong> to batch-export every card at once.
+    </div>
+  </div>
+
+  <!-- Tip 6: Search -->
+  <div class="tip-btn-wrap">
+    <button class="tip-btn" onclick="toggleTip(this)">🔎 Search</button>
+    <div class="tip-popover pop-below">
+      <div class="tip-popover-arrow"></div>
+      <div class="tip-popover-title">🔎 Search &amp; Filter Cards</div>
+      Type any name in the search box to filter cards by:<br>
+      <ul>
+        <li>Area Manager name</li>
+        <li>Supervisor name</li>
+        <li>Refiller name</li>
+      </ul>
+      The card count updates in real time.
+    </div>
+  </div>
+
+  <!-- Special HOW IT WORKS button -->
+  <div style="margin-left:auto;">
+    <button class="tip-btn tip-how" onclick="openHIW()">❓ How This Program Works</button>
+  </div>
+</div>
+
+<!-- How It Works Modal -->
+<div class="hiw-modal-overlay" id="hiwOverlay" onclick="closeHIWOutside(event)">
+  <div class="hiw-modal">
+    <div class="hiw-modal-header">
+      <h2>❓ How This Program Works</h2>
+      <button class="hiw-modal-close" onclick="closeHIW()">✕</button>
+    </div>
+    <div class="hiw-modal-body">
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">1</div>
+        <div class="hiw-step-text">
+          <h3>Export Your AppSheet Data</h3>
+          <p>From AppSheet, export the <strong>PJP view data</strong> as a CSV (e.g. <em>AppSheet_ViewData_YYYY-MM-DD.csv</em>). This file contains one row per refiller per planned store visit for the day.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">2</div>
+        <div class="hiw-step-text">
+          <h3>Upload the CSV Here</h3>
+          <p>Drag &amp; drop the file onto the upload zone or click to browse. The tool reads these key columns from your export:</p>
+          <div class="hiw-field-grid">
+            <div class="hiw-field-chip"><strong>AREA MANAGER</strong>Supervisor's AM</div>
+            <div class="hiw-field-chip"><strong>SUPERVISOR</strong>Field supervisor</div>
+            <div class="hiw-field-chip"><strong>REFILLER NAME</strong>Refiller on PJP</div>
+            <div class="hiw-field-chip"><strong>Category</strong>Visit outcome tag</div>
+            <div class="hiw-field-chip"><strong>STORE NAME</strong>Outlet visited</div>
+            <div class="hiw-field-chip"><strong>REGION / OM</strong>Hierarchy info</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">3</div>
+        <div class="hiw-step-text">
+          <h3>Understanding Categories</h3>
+          <p>Each row is tagged with a <strong>Category</strong> based on what happened during that store visit:</p>
+          <div class="hiw-cat-list">
+            <span class="hiw-cat-pill" style="background:rgba(225,29,72,0.1);color:#e11d48;border-color:rgba(225,29,72,0.3);">NO Report ⚠️</span>
+            <span class="hiw-cat-pill" style="background:rgba(22,163,74,0.1);color:#16a34a;border-color:rgba(22,163,74,0.3);">PRESENT ✅</span>
+            <span class="hiw-cat-pill" style="background:rgba(8,145,178,0.1);color:#0891b2;border-color:rgba(8,145,178,0.3);">Time In with PRESENT</span>
+            <span class="hiw-cat-pill" style="background:rgba(8,145,178,0.1);color:#0891b2;border-color:rgba(8,145,178,0.3);">Time In Only</span>
+            <span class="hiw-cat-pill" style="background:rgba(234,108,0,0.1);color:#ea6c00;border-color:rgba(234,108,0,0.3);">ABSENT</span>
+            <span class="hiw-cat-pill" style="background:rgba(75,80,104,0.1);color:#4b5068;border-color:rgba(75,80,104,0.3);">DAY OFF</span>
+            <span class="hiw-cat-pill" style="background:rgba(75,80,104,0.1);color:#4b5068;border-color:rgba(75,80,104,0.3);">VACANT</span>
+          </div>
+          <p style="margin-top:8px;">This tool <strong>only surfaces NO Report rows</strong> — refillers who were scheduled but did not submit any attendance record.</p>
+        </div>
+      </div>
+
+      <hr class="hiw-divider">
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">4</div>
+        <div class="hiw-step-text">
+          <h3>Review the AM Breakdown Panel</h3>
+          <p>After processing, the <strong>Breakdown by Area Manager</strong> panel groups all NO Report refillers by their AM and supervisor. Expand each AM row to see per-supervisor counts and progress bars.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">5</div>
+        <div class="hiw-step-text">
+          <h3>Use the PJP Ratio to Spot Issues</h3>
+          <p>Click <strong>Show PJP Ratio</strong> to reveal what percentage of each supervisor's planned visits ended up as NO Reports. A high ratio (🔴 red) may indicate a field attendance problem that needs follow-up.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">6</div>
+        <div class="hiw-step-text">
+          <h3>Share Report Cards</h3>
+          <p>Each supervisor gets a <strong>Report Card</strong> listing their NO Report refillers. Copy or download these cards as PNG images to send directly via Viber, Teams, or group chats — no screenshots needed.</p>
+        </div>
+      </div>
+
+    </div>
+    <div class="hiw-modal-footer">
+      <p>Data source: AppSheet PJP View Export &nbsp;·&nbsp; Filters on Category = "NO Report"</p>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Upload Section -->
+  <div class="upload-section" id="uploadSection">
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📂</div>
+      <h3>Click to select or drag &amp; drop your CSV file</h3>
+      <div class="file-chosen hidden" id="fileChosen"></div>
+    </div>
+    <input type="file" id="fileInput" accept=".csv">
+    <div class="btn-row">
+      <button class="btn btn-primary" id="processBtn" disabled onclick="processCSV()">
+        ⚙️ Process CSV
+      </button>
+      <button class="btn btn-danger" id="resetBtn" onclick="resetApp()">
+        🔄 Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- Status Alert -->
+  <div id="statusArea"></div>
+
+  <!-- Summary -->
+  <div id="summarySection" class="hidden">
+    <div class="section-title">📊 Summary</div>
+    <div class="summary-grid" id="summaryGrid"></div>
+  </div>
+
+  <!-- AM Breakdown Panel -->
+  <div id="amBreakdownSection" class="hidden">
+    <div class="am-panel" id="amPanel"></div>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar hidden" id="searchBar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search by Supervisor, Area Manager, or Refiller…" oninput="filterCards()">
+    <span class="results-count" id="resultsCount"></span>
+  </div>
+
+  <!-- Cards -->
+  <div id="cardsSection" class="hidden">
+    <div class="section-title" style="justify-content:space-between;">
+      <span>🗂️ Report Cards</span>
+      <button class="btn-copy-all-img" id="downloadAllCardsBtn" onclick="downloadAllCardImages()" style="font-size:11.5px;padding:6px 12px;">⬇️ Download All Images</button>
+    </div>
+    <div class="cards-grid" id="cardsGrid"></div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state hidden" id="emptyState">
+    <div class="empty-icon">📭</div>
+    <h3>No NO Report records found</h3>
+    <p>The uploaded CSV has no records where Category = "NO Report".</p>
+  </div>
+
+</div>
+
+<!-- Hidden off-screen render container -->
+<div id="renderContainer" style="position:fixed;left:-9999px;top:-9999px;pointer-events:none;"></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────
+// ito ang mga global variables natin, kailangan ito dahil dito naka store lahat ng data na ginagamit sa buong app
+// wag na wag gagalawin ever yung mga variable names kasi magulo lahat kapag napalitan
+let allGroups = []; // [{areaManager, supervisor, refillers, totalPJP, date, time}]
+let pjpTotals = { bySup: {}, byAM: {}, grand: 0 }; // PJP counts for all rows
+let showPJPRatio = false; // toggled by user
+let cardSortState = { col: null, dir: 'asc' }; // pivot table sort state
+
+// Detect clipboard support once at startup — used to label buttons appropriately
+const canUseClipboard = !!(navigator.clipboard && window.ClipboardItem);
+const copyBtnLabel = canUseClipboard ? '📋 Copy Image' : '💾 Save Image';
+
+// ─── Upload Handling ──────────────────────────────────────
+// ito ang nag papagana ng pag upload ng CSV file, drag and drop o click lang para mag browse
+const uploadZone = document.getElementById('uploadZone');
+const fileInput  = document.getElementById('fileInput');
+const fileChosen = document.getElementById('fileChosen');
+const processBtn = document.getElementById('processBtn');
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+
+// kailangan ito dahil dito chineck kung tama ba yung file na in-upload (dapat .csv lang)
+function handleFile(f) {
+  if (!f.name.toLowerCase().endsWith('.csv')) {
+    showAlert('error', '❌ Invalid file format. Please upload a .csv file.');
+    return;
+  }
+  fileChosen.innerHTML = `✅ <span class="fc-name">${escHtml(f.name)}</span> <span class="fc-size">· ${(f.size/1024).toFixed(1)} KB</span> <span class="fc-change">Change</span>`;
+  fileChosen.classList.remove('hidden');
+  uploadZone.classList.add('has-file');
+  processBtn.disabled = false;
+  processBtn._file = f;
+  showAlert('info', `📄 File ready: <strong>${escHtml(f.name)}</strong>. Click <strong>Process CSV</strong> to continue.`);
+}
+
+// ─── CSV Processing ───────────────────────────────────────
+// dito nangyayari yung main logic, ito yung pinaka core ng app kaya wag na wag gagalawin ever
+// ito ang nag papagana pag pinindot yung process button, dito tatawagin yung PapaParse library
+function processCSV() {
+  const f = processBtn._file;
+  if (!f) return;
+  processBtn.disabled = true;
+  processBtn.innerHTML = '<span class="spinner"></span> Processing…';
+
+  Papa.parse(f, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: h => h.trim(),
+    complete: result => {
+      processBtn.innerHTML = '⚙️ Process CSV';
+      processBtn.disabled = false;
+      handleParsed(result);
+    },
+    error: err => {
+      processBtn.innerHTML = '⚙️ Process CSV';
+      processBtn.disabled = false;
+      showAlert('error', `❌ CSV parse error: ${err.message}`);
+    }
+  });
+}
+
+// kailangan ito dahil dito na process at ginrupo lahat ng rows mula sa csv base sa supervisor/AM
+function handleParsed(result) {
+  const rows = result.data;
+  if (!rows.length) { showAlert('error', '❌ The CSV file is empty.'); return; }
+
+  // Column detection (case-insensitive)
+  const headers = Object.keys(rows[0]);
+  const find = (names) => headers.find(h => names.some(n => h.toLowerCase().replace(/[\s_\-]+/g,'') === n.toLowerCase().replace(/[\s_\-]+/g,'')));
+
+  const colAM   = find(['AREAMANAGER','AreaManager']);
+  const colSUP  = find(['SUPERVISOR','Supervisor']);
+  const colREF  = find(['REFILLERNAME','RefillerName','Refiller']);
+  const colCAT  = find(['Category','CATEGORY','category']);
+
+  const missing = [];
+  if (!colAM)  missing.push('AREA MANAGER');
+  if (!colSUP) missing.push('SUPERVISOR');
+  if (!colREF) missing.push('REFILLER NAME');
+  if (!colCAT) missing.push('Category');
+
+  if (missing.length) {
+    showAlert('error', `❌ Required columns not found: <strong>${missing.join(', ')}</strong>.<br>Available columns: ${headers.slice(0,20).join(', ')}…`);
+    return;
+  }
+
+  // ── Compute PJP totals from ALL rows (not just NO Report) ──
+  pjpTotals = { bySup: {}, byAM: {}, grand: 0 };
+  rows.forEach(r => {
+    const am  = (r[colAM]  || '').trim() || '(No Area Manager)';
+    const sup = (r[colSUP] || '').trim() || '(Unknown Supervisor)';
+    pjpTotals.bySup[sup] = (pjpTotals.bySup[sup] || 0) + 1;
+    pjpTotals.byAM[am]   = (pjpTotals.byAM[am]   || 0) + 1;
+    pjpTotals.grand++;
+  });
+
+  // Filter: Category = "NO Report" (case-insensitive, trimmed)
+  const filtered = rows.filter(r => {
+    const cat = (r[colCAT] || '').trim().toLowerCase();
+    return cat === 'no report';
+  });
+
+  if (!filtered.length) {
+    showAlert('info', 'ℹ️ No records with Category = "NO Report" were found in this file.');
+    document.getElementById('emptyState').classList.remove('hidden');
+    hideSections();
+    return;
+  }
+
+  // Group by Supervisor → sort by Area Manager then Supervisor
+  const groupMap = {};
+  filtered.forEach(r => {
+    const am  = (r[colAM]  || '').trim();
+    const sup = (r[colSUP] || '').trim();
+    const ref = (r[colREF] || '').trim();
+    const key = sup || '(Unknown Supervisor)';
+    if (!groupMap[key]) groupMap[key] = { areaManager: am, supervisor: key, refillers: [] };
+    if (ref) groupMap[key].refillers.push(ref);
+  });
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'2-digit' });
+  const timeStr = now.toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+
+  allGroups = Object.values(groupMap)
+    .sort((a,b) => a.areaManager.localeCompare(b.areaManager) || a.supervisor.localeCompare(b.supervisor))
+    .map(g => ({ ...g, date: dateStr, time: timeStr }));
+
+  renderSummary(filtered.length, dateStr, timeStr);
+  renderAMBreakdown();
+  renderCards();
+  showAlert('success', `✅ Processed <strong>${rows.length}</strong> rows · Found <strong>${filtered.length}</strong> NO Report records across <strong>${allGroups.length}</strong> supervisor(s).`);
+}
+
+// ─── Summary ──────────────────────────────────────────────
+// ito ang gumagawa ng summary cards sa taas (total NO reports, etc)
+// nag papakita lang ng summary stats, for display purposes lang ito
+function renderSummary(total, date, time) {
+  const grid = document.getElementById('summaryGrid');
+  grid.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Supervisors</div>
+      <div class="stat-value">${allGroups.length}</div>
+      <div class="stat-sub">with NO Reports</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total NO Reports</div>
+      <div class="stat-value">${total}</div>
+      <div class="stat-sub">records found</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Generated on</div>
+      <div class="stat-value" style="font-size:17px;margin-top:4px">${date}</div>
+      <div class="stat-sub">${time}</div>
+    </div>
+  `;
+  document.getElementById('summarySection').classList.remove('hidden');
+}
+
+// ─── Cards ────────────────────────────────────────────────
+// dito ginagawa yung mga individual report cards na makikita per supervisor
+// ito ang nag loop sa lahat ng groups para gawin yung mga cards isa isa
+function renderCards() {
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = '';
+  allGroups.forEach((g, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'card-wrapper';
+    wrapper.dataset.supervisor = g.supervisor.toLowerCase();
+    wrapper.dataset.areamanager = (g.areaManager || '').toLowerCase();
+    wrapper.dataset.refillers = g.refillers.join('|').toLowerCase();
+    wrapper.innerHTML = `
+      <div class="report-card" id="reportCard${i}">
+        ${buildCardHTML(g, i)}
+      </div>
+    `;
+    grid.appendChild(wrapper);
+  });
+  document.getElementById('cardsSection').classList.remove('hidden');
+  document.getElementById('searchBar').classList.remove('hidden');
+  document.getElementById('emptyState').classList.add('hidden');
+  updateResultsCount();
+}
+
+// kailangan ito dahil dito ginagawa yung actual na HTML structure ng isang card, parang template lang sya
+function buildCardHTML(g, i) {
+  const tableRows = g.refillers.map(r => `
+    <tr>
+      <td>${escHtml(g.areaManager || '—')}</td>
+      <td>${escHtml(g.supervisor)}</td>
+      <td>${escHtml(r)}</td>
+      <td><span class="rc-no-report-pill">NO Report</span></td>
+    </tr>
+  `).join('');
+
+  return `
+    <div class="rc-header">
+      <div class="rc-title-block">
+        <h2>📋 NO Report Summary</h2>
+      </div>
+      <div class="rc-header-date" title="Time this report was generated (not the date of the NO Report entries)">Generated: ${escHtml(g.date)} · ${escHtml(g.time)}</div>
+    </div>
+    <table class="rc-pivot-table">
+      <thead>
+        <tr>
+          <th onclick="sortCards('am')" style="cursor:pointer;user-select:none;" title="Sort by Area Manager">Area Manager <span class="sort-arrow" data-sort-col="am">↕</span></th>
+          <th onclick="sortCards('sup')" style="cursor:pointer;user-select:none;" title="Sort by Supervisor">Supervisor <span class="sort-arrow" data-sort-col="sup">↕</span></th>
+          <th onclick="sortCards('ref')" style="cursor:pointer;user-select:none;" title="Sort by Refiller Name">Refiller Name <span class="sort-arrow" data-sort-col="ref">↕</span></th>
+          <th>Category</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableRows || `<tr><td colspan="4" style="text-align:center;color:#999;font-style:italic;padding:12px;">No refiller names found</td></tr>`}
+        <tr class="rc-grand-total">
+          <td colspan="3"><strong>Grand Total</strong></td>
+          <td><strong>${g.refillers.length}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="rc-actions no-export">
+      <button class="btn btn-copy" id="copyBtn${i}" onclick="copyImage(${i})">${copyBtnLabel}</button>
+      <button class="btn btn-dl" onclick="downloadImage(${i}, event)">⬇️ Download PNG</button>
+    </div>
+  `;
+}
+
+// para safe yung text na ilalagay sa HTML, wag na wag gagalawin ever para di magka error pag may special characters
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Search / Filter ──────────────────────────────────────
+// ito yung nag papagana ng search bar natin para mahanap agad yung supervisor o AM
+// every keystroke sa search box tatawagin ito para i-filter agad agad yung mga cards
+function filterCards() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  let shown = 0;
+  document.querySelectorAll('.card-wrapper').forEach(w => {
+    const refMatch = q && w.dataset.refillers
+      ? w.dataset.refillers.split('|').some(r => r.includes(q))
+      : false;
+    const match = !q
+      || w.dataset.supervisor.includes(q)
+      || w.dataset.areamanager.includes(q)
+      || refMatch;
+    w.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+  updateResultsCount(shown);
+}
+
+// para makapag sort ng column pag pinindot yung column header, parang sa excel lang
+function sortCards(col) {
+  if (cardSortState.col === col) {
+    cardSortState.dir = cardSortState.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    cardSortState.col = col;
+    cardSortState.dir = 'asc';
+  }
+
+  // Sort allGroups in-place
+  allGroups.sort((a, b) => {
+    let va, vb;
+    if (col === 'am')  { va = a.areaManager.toLowerCase(); vb = b.areaManager.toLowerCase(); }
+    if (col === 'sup') { va = a.supervisor.toLowerCase();  vb = b.supervisor.toLowerCase();  }
+    if (col === 'ref') { va = (a.refillers[0] || '').toLowerCase(); vb = (b.refillers[0] || '').toLowerCase(); }
+    if (va < vb) return cardSortState.dir === 'asc' ? -1 : 1;
+    if (va > vb) return cardSortState.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  renderCards();
+  filterCards(); // re-apply any active search
+
+  // Update arrow indicators using data attributes (no duplicate-ID issues)
+  document.querySelectorAll('.sort-arrow[data-sort-col]').forEach(el => {
+    const c = el.dataset.sortCol;
+    el.textContent = c === cardSortState.col ? (cardSortState.dir === 'asc' ? '▲' : '▼') : '↕';
+    el.style.opacity = c === cardSortState.col ? '1' : '0.45';
+  });
+}
+
+// para malagay lang sa screen kung ilan yung nakikitang results ngayon
+function updateResultsCount(shown) {
+  const total = allGroups.length;
+  const n = shown !== undefined ? shown : total;
+  document.getElementById('resultsCount').textContent = n === total ? `${total} card(s)` : `${n} of ${total} card(s)`;
+}
+
+// ─── Image Generation ─────────────────────────────────────
+// dito ginagamit yung html2canvas library para gawing image yung card, kailangan ito dahil yan ang ginagamit pag mag download o copy ng image
+async function getCardCanvas(index) {
+  const cardEl = document.getElementById(`reportCard${index}`);
+  // Clone into off-screen container at fixed width for consistent rendering
+  const container = document.getElementById('renderContainer');
+  const clone = cardEl.cloneNode(true);
+  clone.querySelectorAll('.no-export').forEach(el => el.remove());
+  clone.style.width = '480px';
+  clone.style.borderRadius = '14px';
+  clone.style.overflow = 'hidden';
+  container.appendChild(clone);
+
+  // Wait a tick for layout
+  await new Promise(r => setTimeout(r, 80));
+
+  const canvas = await html2canvas(clone, {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff',
+    width: 480,
+    windowWidth: 480
+  });
+
+  container.removeChild(clone);
+  return canvas;
+}
+
+async function copyImage(index) {
+  const btn = document.getElementById(`copyBtn${index}`);
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner"></span> Generating…';
+  btn.disabled = true;
+
+  try {
+    const canvas = await getCardCanvas(index);
+
+    // Strategy 1: ClipboardItem with a Promise — keeps the user gesture alive in Chrome
+    // so the document-focus restriction is bypassed.
+    if (navigator.clipboard && window.ClipboardItem) {
+      const blobPromise = new Promise(res => canvas.toBlob(res, 'image/png'));
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blobPromise })
+        ]);
+        btn.innerHTML = '✅ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); btn.disabled = false; }, 2500);
+        return;
+      } catch (clipErr) {
+        // Clipboard write failed (focus issue or permission) — fall through to download
+        console.warn('Clipboard write failed, falling back to download:', clipErr.message);
+      }
+    }
+
+    // Strategy 2: Silent auto-download fallback — no scary error shown
+    triggerDownload(canvas, allGroups[index]);
+    btn.innerHTML = '⬇️ Saved!';
+    setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2500);
+    showAlert('info', '💾 Image saved to your Downloads folder. (Clipboard image copy isn\'t supported when opening files directly — this is normal.)');
+
+  } catch (err) {
+    console.error(err);
+    btn.innerHTML = orig;
+    btn.disabled = false;
+    showAlert('error', `❌ Could not generate image: ${err.message}`);
+  }
+}
+
+async function downloadImage(index, e) {
+  const g = allGroups[index];
+  const btn = e.currentTarget;
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+
+  try {
+    const canvas = await getCardCanvas(index);
+    triggerDownload(canvas, g);
+  } finally {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+}
+
+async function downloadAllCardImages() {
+  const btn = document.getElementById('downloadAllCardsBtn');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+
+  // Only download visible cards (respects search filter)
+  const visibleWrappers = [...document.querySelectorAll('.card-wrapper')].filter(w => w.style.display !== 'none');
+  if (!visibleWrappers.length) { btn.disabled = false; return; }
+
+  let toast = document.createElement('div');
+  toast.className = 'copy-all-toast';
+  toast.textContent = `Generating 1 of ${visibleWrappers.length}…`;
+  document.body.appendChild(toast);
+
+  try {
+    for (let i = 0; i < visibleWrappers.length; i++) {
+      const wrapper = visibleWrappers[i];
+      // Extract index from the copyBtn id inside this wrapper
+      const copyBtnEl = wrapper.querySelector('[id^="copyBtn"]');
+      if (!copyBtnEl) continue;
+      const idx = parseInt(copyBtnEl.id.replace('copyBtn',''), 10);
+      const g = allGroups[idx];
+      toast.textContent = `Generating ${i + 1} of ${visibleWrappers.length} — ${g.supervisor}…`;
+      btn.innerHTML = `⬇️ ${i + 1}/${visibleWrappers.length}`;
+      const canvas = await getCardCanvas(idx);
+      triggerDownload(canvas, g);
+      await new Promise(r => setTimeout(r, 400));
+    }
+    toast.textContent = `✅ All ${visibleWrappers.length} images downloaded!`;
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+  } catch (err) {
+    toast.textContent = `❌ Error: ${err.message}`;
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+  } finally {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+}
+
+// ito ang nag papagana pag pinindot yung download button, nagsesave ng image sa device
+function triggerDownload(canvas, g) {
+  const name = g.supervisor.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_');
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = `${name}_NO_Report_${dateSlug}.png`;
+  a.click();
+}
+
+// ─── AM Breakdown Panel ───────────────────────────────────
+// dito gumagawa ng breakdown per Area Manager, parang accordion na pwedeng i-expand/collapse
+// ito ang main function para sa AM breakdown panel, kailangan ito dahil dito ginrupo lahat per AM tapos per supervisor
+function renderAMBreakdown() {
+  // Build AM → [supervisors] map using NO-report counts
+  const amMap = {};
+  allGroups.forEach(g => {
+    const am = g.areaManager || '(No Area Manager)';
+    if (!amMap[am]) amMap[am] = [];
+    amMap[am].push({ supervisor: g.supervisor, noCount: g.refillers.length });
+  });
+
+  // Sort AMs by NO-report total descending
+  const amList = Object.entries(amMap).map(([am, sups]) => ({
+    am,
+    sups: sups.sort((a, b) => b.noCount - a.noCount),
+    noTotal: sups.reduce((s, x) => s + x.noCount, 0),
+    pjpTotal: pjpTotals.byAM[am] || 0
+  })).sort((a, b) => b.noTotal - a.noTotal);
+
+  const grandNoTotal  = amList.reduce((s, x) => s + x.noTotal, 0);
+  const grandPjpTotal = pjpTotals.grand;
+  const amCount = amList.length;
+
+  const buildItems = () => amList.map((entry, idx) => {
+    const supRows = entry.sups.map(s => {
+      const pjpSup = pjpTotals.bySup[s.supervisor] || 0;
+      const pct = entry.noTotal ? Math.round((s.noCount / entry.noTotal) * 100) : 0;
+      const ratioClass = getRatioClass(s.noCount, pjpSup);
+      const ratioHTML = showPJPRatio && pjpSup
+        ? `<span class="pjp-ratio ${ratioClass}">${s.noCount}/${pjpSup}</span>`
+        : '';
+      return `
+        <div class="am-sup-row">
+          <div class="am-sup-dot"></div>
+          <div class="am-sup-name">${escHtml(s.supervisor)}</div>
+          ${ratioHTML}
+          <div class="am-sup-badge">${s.noCount}</div>
+          <div class="am-sup-bar-wrap"><div class="am-sup-bar" style="width:${pct}%"></div></div>
+          <div class="am-sup-pct">${pct}%</div>
+        </div>`;
+    }).join('');
+
+    const supLabel = entry.sups.length === 1 ? '1 supervisor' : `${entry.sups.length} supervisors`;
+    const openClass = idx === 0 ? 'open' : '';
+    const amRatioClass = getRatioClass(entry.noTotal, entry.pjpTotal);
+    const amRatioHTML = showPJPRatio && entry.pjpTotal
+      ? `<span class="pjp-ratio ${amRatioClass}" style="font-size:11px;">${entry.noTotal}/${entry.pjpTotal}</span>`
+      : '';
+
+    return `
+      <div class="am-item ${openClass}" id="amItem${idx}" data-am-idx="${idx}">
+        <div class="am-item-header" onclick="toggleAM(${idx})">
+          <span class="am-chevron">▶</span>
+          <span class="am-name">${escHtml(entry.am)}</span>
+          <span class="am-sup-count">${supLabel}</span>
+          ${amRatioHTML}
+          <span class="am-total-badge">${entry.noTotal} NO Reports</span>
+        </div>
+        <div class="am-sups">${supRows}</div>
+        <div class="am-item-actions">
+          <button class="btn-am-img btn-am-copy-img" id="amCopyBtn${idx}" onclick="copyAMImage(${idx}, event)">${canUseClipboard ? '📋 Copy Image' : '💾 Save Image'}</button>
+          <button class="btn-am-img btn-am-dl-img"   id="amDlBtn${idx}"   onclick="downloadAMImage(${idx}, event)">⬇️ Download PNG</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  const grandRatioHTML = showPJPRatio && grandPjpTotal
+    ? `<span class="pjp-ratio ${getRatioClass(grandNoTotal, grandPjpTotal)}" style="font-size:12px;">${grandNoTotal}/${grandPjpTotal} PJPs</span>`
+    : '';
+
+  const panel = document.getElementById('amPanel');
+  panel.innerHTML = `
+    <div class="am-panel-header">
+      <div class="am-panel-title">📊 Breakdown by Area Manager</div>
+      <div class="am-panel-actions">
+        <button class="btn-toggle-ratio ${showPJPRatio ? 'active' : ''}" id="toggleRatioBtn" onclick="togglePJPRatio()" title="PJP (Planned Journey Plan) Ratio = NO Reports ÷ Total PJP visits. Shows how many planned visits resulted in a NO Report. Green = low, Orange = moderate, Red = high.">
+          ${showPJPRatio ? '🔢 Hide PJP Ratio' : '🔢 Show PJP Ratio'} <span style="font-size:10px;opacity:0.7;margin-left:2px;" title="PJP (Planned Journey Plan) Ratio = NO Reports ÷ Total PJP visits. Shows how many planned visits resulted in a NO Report. Green = low, Orange = moderate, Red = high.">(?)</span>
+        </button>
+        <button class="btn-expand-all" id="expandAllBtn" onclick="toggleExpandAll()">Expand All</button>
+        <button class="btn-copy-am" id="copyAMBtn" onclick="copyAMSummary()">📋 Copy Summary</button>
+        <span class="am-panel-actions-divider"></span>
+        <button class="btn-copy-all-img" id="copyAllAMBtn" onclick="downloadAllAMImages()" title="Download a PNG image for every Area Manager">⬇️ Download All</button>
+      </div>
+    </div>
+    ${buildItems()}
+    <div class="am-panel-footer">
+      <span class="am-panel-footer-label">Grand Total · ${amCount} Area Manager${amCount !== 1 ? 's' : ''}</span>
+      <span style="display:flex;align-items:center;gap:10px;">
+        ${grandRatioHTML}
+        <span class="am-panel-footer-val">${grandNoTotal} NO Reports</span>
+      </span>
+    </div>
+  `;
+
+  document.getElementById('amBreakdownSection').classList.remove('hidden');
+
+  // Store for image generation
+  window._amList = amList;
+}
+
+// ─── AM Image Generation ──────────────────────────────────
+// para sa pag gawa ng image specifically para sa AM summary card (yung offscreen render)
+// gumagawa ng offscreen element na ggamitin lang sa html2canvas, kailangan ito dahil di pwedeng kunin agad ang screenshot kung wala muna itong element
+function buildAMCardEl(entry) {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'2-digit' });
+  const timeStr = now.toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit', hour12:true });
+
+  const ratioLine = showPJPRatio && entry.pjpTotal
+    ? `<span style="font-family:'DM Mono',monospace;font-size:10px;color:#8b90a8;">${entry.noTotal}/${entry.pjpTotal} PJPs</span>` : '';
+
+  const rows = entry.sups.map(s => {
+    const pjpSup = pjpTotals.bySup[s.supervisor] || 0;
+    const ratioCell = showPJPRatio && pjpSup
+      ? `<td style="font-family:'DM Mono',monospace;font-size:11px;color:#8b90a8;padding:6px 10px;border-right:1px solid #d1d5e0;border-bottom:1px solid #d1d5e0;">${s.noCount}/${pjpSup}</td>`
+      : '';
+    return `<tr>
+      <td style="padding:6px 10px;border-right:1px solid #d1d5e0;border-bottom:1px solid #d1d5e0;font-size:12px;color:#1a1d2e;">${escHtml(s.supervisor)}</td>
+      ${ratioCell}
+      <td style="padding:6px 10px;border-bottom:1px solid #d1d5e0;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#e11d48;text-align:right;">${s.noCount}</td>
+    </tr>`;
+  }).join('');
+
+  const ratioHeader = showPJPRatio
+    ? `<th style="background:#eef0f6;color:#16a34a;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;padding:7px 10px;text-align:left;border-right:1px solid #d1d5e0;border-bottom:1px solid #d1d5e0;">PJP Ratio</th>`
+    : '';
+
+  const totalRatioCell = showPJPRatio && entry.pjpTotal
+    ? `<td style="background:#f5f6fa;font-weight:700;font-size:12px;padding:7px 10px;border-right:1px solid #d1d5e0;border-top:2px solid #b8bdd0;font-family:'DM Mono',monospace;color:#8b90a8;">${entry.noTotal}/${entry.pjpTotal}</td>`
+    : '';
+
+  const div = document.createElement('div');
+  div.className = 'am-summary-card';
+  div.style.cssText = 'width:440px;background:#fff;border-radius:10px;overflow:hidden;font-family:DM Sans,sans-serif;border:1px solid #d1d5e0;';
+  div.innerHTML = `
+    <div style="background:#eef0f6;border-bottom:1px solid #d1d5e0;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-family:Syne,sans-serif;font-size:12px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:0.3px;">📊 Area Manager Summary</span>
+      <span style="font-family:'DM Mono',monospace;font-size:10px;color:#8b90a8;">${dateStr} · ${timeStr}</span>
+    </div>
+    <div style="padding:9px 14px;border-bottom:1px solid #d1d5e0;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:#1a1d2e;">👤 ${escHtml(entry.am)}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        ${ratioLine}
+        <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;background:rgba(225,29,72,0.10);color:#e11d48;padding:2px 9px;border-radius:20px;border:1px solid rgba(225,29,72,0.22);white-space:nowrap;">${entry.noTotal} NO Reports</span>
+      </div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="background:#eef0f6;color:#16a34a;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;padding:7px 10px;text-align:left;border-right:1px solid #d1d5e0;border-bottom:1px solid #d1d5e0;">Supervisor</th>
+          ${ratioHeader}
+          <th style="background:#eef0f6;color:#16a34a;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;padding:7px 10px;text-align:right;border-bottom:1px solid #d1d5e0;">NO Reports</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        <tr>
+          <td style="background:#f5f6fa;font-weight:700;font-size:12px;padding:7px 10px;border-right:1px solid #d1d5e0;border-top:2px solid #b8bdd0;">Grand Total</td>
+          ${totalRatioCell}
+          <td style="background:#f5f6fa;font-weight:700;font-size:12px;padding:7px 10px;border-top:2px solid #b8bdd0;font-family:'DM Mono',monospace;color:#e11d48;text-align:right;">${entry.noTotal}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="background:#eef0f6;border-top:1px solid #d1d5e0;padding:6px 12px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-family:'DM Mono',monospace;font-size:10px;color:#8b90a8;">NO REPORT MONITORING</span>
+      <span style="font-family:'DM Mono',monospace;font-size:10px;color:#8b90a8;">${entry.sups.length} supervisor${entry.sups.length !== 1 ? 's' : ''}</span>
+    </div>
+  `;
+  return div;
+}
+
+async function getAMCanvas(idx) {
+  const entry = window._amList[idx];
+  const container = document.getElementById('renderContainer');
+  const card = buildAMCardEl(entry);
+  card.style.position = 'absolute';
+  container.appendChild(card);
+  await new Promise(r => setTimeout(r, 80));
+  const canvas = await html2canvas(card, {
+    scale: 2, useCORS: true, logging: false,
+    backgroundColor: '#ffffff', width: 440, windowWidth: 440
+  });
+  container.removeChild(card);
+  return canvas;
+}
+
+async function copyAMImage(idx, e) {
+  e.stopPropagation(); // don't toggle accordion
+  const btn = document.getElementById(`amCopyBtn${idx}`);
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner" style="border-top-color:#0891b2;border-color:rgba(8,145,178,0.3);"></span>';
+  btn.disabled = true;
+
+  try {
+    const canvas = await getAMCanvas(idx);
+    if (navigator.clipboard && window.ClipboardItem) {
+      const blobPromise = new Promise(res => canvas.toBlob(res, 'image/png'));
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]);
+        btn.innerHTML = '✅ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); btn.disabled = false; }, 2500);
+        return;
+      } catch { /* fall through */ }
+    }
+    // Fallback: download
+    triggerAMDownload(canvas, window._amList[idx]);
+    btn.innerHTML = '⬇️ Saved!';
+    btn.classList.add('saved');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('saved'); btn.disabled = false; }, 2500);
+  } catch (err) {
+    btn.innerHTML = orig; btn.disabled = false;
+    showAlert('error', `❌ Could not generate image: ${err.message}`);
+  }
+}
+
+async function downloadAMImage(idx, e) {
+  e.stopPropagation();
+  const btn = document.getElementById(`amDlBtn${idx}`);
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner" style="border-top-color:#7c3aed;border-color:rgba(124,58,237,0.3);"></span>';
+  btn.disabled = true;
+  try {
+    const canvas = await getAMCanvas(idx);
+    triggerAMDownload(canvas, window._amList[idx]);
+  } finally {
+    btn.innerHTML = orig; btn.disabled = false;
+  }
+}
+
+// para sa pag download ng AM summary bilang image file
+function triggerAMDownload(canvas, entry) {
+  const dateSlug = new Date().toISOString().slice(0,10);
+  const name = entry.am.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_');
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = `${name}_AM_Summary_${dateSlug}.png`;
+  a.click();
+}
+
+async function downloadAllAMImages() {
+  const list = window._amList;
+  if (!list || !list.length) return;
+  const btn = document.getElementById('copyAllAMBtn');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+
+  let toast = document.createElement('div');
+  toast.className = 'copy-all-toast';
+  toast.textContent = `Generating 1 of ${list.length}…`;
+  document.body.appendChild(toast);
+
+  try {
+    for (let i = 0; i < list.length; i++) {
+      toast.textContent = `Generating ${i + 1} of ${list.length} — ${list[i].am}…`;
+      btn.innerHTML = `⬇️ ${i + 1}/${list.length}`;
+      const canvas = await getAMCanvas(i);
+      triggerAMDownload(canvas, list[i]);
+      // Small gap so browser doesn't block multiple downloads
+      await new Promise(r => setTimeout(r, 400));
+    }
+    toast.textContent = `✅ All ${list.length} images downloaded!`;
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+  } catch (err) {
+    toast.textContent = `❌ Error: ${err.message}`;
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+  } finally {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+}
+
+// para makuha kung anong color yung gagamitin (low, mid, high) base sa ratio ng NO reports sa total PJP
+function getRatioClass(no, total) {
+  if (!total) return '';
+  const pct = no / total;
+  if (pct >= 0.5) return 'ratio-high';
+  if (pct >= 0.25) return 'ratio-mid';
+  return 'ratio-low';
+}
+
+// para i-on/off yung pagpapakita ng PJP ratio sa breakdown panel
+function togglePJPRatio() {
+  // Capture which AM items are currently open before re-render
+  const openIndexes = new Set(
+    [...document.querySelectorAll('.am-item.open')].map(el => el.dataset.amIdx)
+  );
+  showPJPRatio = !showPJPRatio;
+  renderAMBreakdown();
+  // Restore open state after re-render
+  openIndexes.forEach(idx => {
+    const el = document.getElementById(`amItem${idx}`);
+    if (el) el.classList.add('open');
+  });
+  updateExpandAllBtn();
+}
+
+// para mag open/close ng isang AM item sa accordion pag pinindot
+function toggleAM(idx) {
+  document.getElementById(`amItem${idx}`).classList.toggle('open');
+  updateExpandAllBtn();
+}
+
+// para mag expand or collapse ng LAHAT ng AM items sa isang click lang
+function toggleExpandAll() {
+  const items = document.querySelectorAll('.am-item');
+  const allOpen = [...items].every(el => el.classList.contains('open'));
+  items.forEach(el => allOpen ? el.classList.remove('open') : el.classList.add('open'));
+  updateExpandAllBtn();
+}
+
+// para malagay kung ano text ng button (Expand All o Collapse All) depende sa current state
+function updateExpandAllBtn() {
+  const btn = document.getElementById('expandAllBtn');
+  if (!btn) return;
+  const items = document.querySelectorAll('.am-item');
+  const allOpen = [...items].every(el => el.classList.contains('open'));
+  btn.textContent = allOpen ? 'Collapse All' : 'Expand All';
+}
+
+// para makopya yung buong AM summary as text, ginagamit ito para sa pag paste sa ibang app like messenger
+function copyAMSummary() {
+  const amMap = {};
+  allGroups.forEach(g => {
+    const am = g.areaManager || '(No Area Manager)';
+    if (!amMap[am]) amMap[am] = [];
+    amMap[am].push({ supervisor: g.supervisor, noCount: g.refillers.length });
+  });
+
+  const amList = Object.entries(amMap).map(([am, sups]) => ({
+    am, sups: sups.sort((a, b) => b.noCount - a.noCount),
+    noTotal: sups.reduce((s, x) => s + x.noCount, 0),
+    pjpTotal: pjpTotals.byAM[am] || 0
+  })).sort((a, b) => b.noTotal - a.noTotal);
+
+  const grandNoTotal  = amList.reduce((s, x) => s + x.noTotal, 0);
+  const grandPjpTotal = pjpTotals.grand;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'2-digit' });
+  const timeStr = now.toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit', hour12:true });
+
+  let lines = [];
+  lines.push(`📊 NO Report Summary — ${dateStr} ${timeStr}`);
+  const grandRatio = grandPjpTotal ? ` (${grandNoTotal}/${grandPjpTotal} PJPs)` : '';
+  lines.push(`Total: ${grandNoTotal} NO Reports${grandRatio}\n`);
+
+  amList.forEach(entry => {
+    const amRatio = showPJPRatio && entry.pjpTotal ? ` · ${entry.noTotal}/${entry.pjpTotal} PJPs` : '';
+    lines.push(`👤 ${entry.am}  [${entry.noTotal} NO Reports${amRatio}]`);
+    entry.sups.forEach(s => {
+      const pjpSup = pjpTotals.bySup[s.supervisor] || 0;
+      const supRatio = showPJPRatio && pjpSup ? ` (${s.noCount}/${pjpSup})` : '';
+      lines.push(`   • ${s.supervisor}: ${s.noCount}${supRatio}`);
+    });
+    lines.push('');
+  });
+
+  const text = lines.join('\n').trim();
+  const btn = document.getElementById('copyAMBtn');
+  const orig = btn.innerHTML;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.innerHTML = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2500);
+  }).catch(() => {
+    showAlert('error', '❌ Could not copy to clipboard. Try selecting and copying manually.');
+  });
+}
+
+// ─── Utility ──────────────────────────────────────────────
+// mga helper functions natin dito, ginagamit ito sa iba't ibang parte ng code
+// para magpakita ng alert message sa screen (error, success, o info)
+function showAlert(type, html) {
+  const icons = { error: '❌', success: '✅', info: 'ℹ️' };
+  document.getElementById('statusArea').innerHTML = `
+    <div class="alert alert-${type}">
+      <span class="alert-icon">${icons[type]}</span>
+      <span>${html}</span>
+    </div>`;
+}
+
+// para itago lahat ng sections pag wala pang na upload na file
+function hideSections() {
+  ['summarySection','amBreakdownSection','searchBar','cardsSection'].forEach(id => document.getElementById(id).classList.add('hidden'));
+}
+
+// ito ang nag papagana pag pinindot yung reset/clear button, babalik sa simula yung buong app
+function resetApp() {
+  allGroups = [];
+  pjpTotals = { bySup: {}, byAM: {}, grand: 0 };
+  showPJPRatio = false;
+  fileInput.value = '';
+  processBtn._file = null;
+  processBtn.disabled = true;
+  fileChosen.classList.add('hidden');
+  fileChosen.innerHTML = '';
+  uploadZone.classList.remove('has-file');
+  document.getElementById('statusArea').innerHTML = '';
+  document.getElementById('cardsGrid').innerHTML = '';
+  document.getElementById('amPanel').innerHTML = '';
+  document.getElementById('searchInput').value = '';
+  hideSections();
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('renderContainer').innerHTML = '';
+}
+
+// ─── Tip Buttons ──────────────────────────────────────────
+// para sa mga tip buttons na may popover pag pinindot, parang tooltip lang to
+// para mag open/close ng tooltip popover
+function toggleTip(btn) {
+  const wrap = btn.closest('.tip-btn-wrap');
+  const isOpen = wrap.classList.contains('tip-open');
+  // Close all
+  document.querySelectorAll('.tip-btn-wrap.tip-open').forEach(w => {
+    w.classList.remove('tip-open');
+    w.querySelector('.tip-btn').classList.remove('tip-active');
+  });
+  if (!isOpen) {
+    wrap.classList.add('tip-open');
+    btn.classList.add('tip-active');
+  }
+}
+
+// Close tips when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.tip-btn-wrap')) {
+    document.querySelectorAll('.tip-btn-wrap.tip-open').forEach(w => {
+      w.classList.remove('tip-open');
+      w.querySelector('.tip-btn').classList.remove('tip-active');
+    });
+  }
+});
+
+// ─── How It Works Modal ───────────────────────────────────
+// dito naman gumagana yung modal na nagpapaliwanag kung paano gamitin yung app
+// para buksan yung How It Works modal
+function openHIW() {
+  document.getElementById('hiwOverlay').classList.add('open');
+  document.querySelector('.tip-btn.tip-how').classList.add('tip-active');
+}
+// para isara yung How It Works modal
+function closeHIW() {
+  document.getElementById('hiwOverlay').classList.remove('open');
+  document.querySelector('.tip-btn.tip-how').classList.remove('tip-active');
+}
+// para isara yung modal pag pinindot sa labas ng modal box
+function closeHIWOutside(e) {
+  if (e.target === document.getElementById('hiwOverlay')) closeHIW();
+}
+// Escape key closes modal
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeHIW();
+});
+
+</script>
+</body>
+
+<!-- ─── Notes / To-Do ──────────────────────────────────────── -->
+<!-- need more checking sa report validation, baka mali yung pag basa ng csv kapag iba format -->
+<!-- dagdag soon ng filter para sa specific date range, ngayon kasi parang lahat lang nakikita -->
+<!-- try soon kung gagana yung app kapag malaking file na, baka mabagal pag madaming rows -->
+<!-- aralin paano gagawin yung export to excel para mas madali i-check ng mga AM -->
+<!-- check din pala if kaya mag add ng dark mode toggle para sa mga gusto mag work sa gabi -->
+<!-- isipin kung paano gagawing mobile friendly lalo na yung mga cards, medyo masikip sa phone -->
+<!-- tanungin mga am o fms kung paano pa mapaganda ui / viewing -->
+<!-- mag ask kay sir jay jay regarding sa pasikot sikot ng mga extracted data and hingi advice pano mas mapaganda -->
+
+</html>
