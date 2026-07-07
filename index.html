@@ -5,7 +5,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>NO Report Monitoring</title>
 <!-- kailangan ito dahil dito galing yung PapaParse library, ito yung gumagawa ng pag basa ng CSV file -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -26,7 +26,8 @@
     --shadow: 0 4px 24px rgba(0,0,0,.08);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; overflow-x: hidden; }
 
   /* ── Header ── */
   /* for styling lang nung header sa taas, wag na wag gagalawin ever kasi dito nakalagay yung logo at title ng app */
@@ -250,10 +251,106 @@
   .empty-state h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
   .empty-state p { font-family: 'DM Mono', monospace; font-size: 12px; }
 
-  @media (max-width: 600px) {
-    .cards-grid { grid-template-columns: 1fr; }
+  /* ══════════════════════════════════════════════════════════════
+     Mobile responsiveness
+     Tuned around iPhone 16 Pro Max (430×932 CSS px) and phones
+     generally. Breakpoints: tablets (768px), phones (640px),
+     small/compact phones (400px).
+     ══════════════════════════════════════════════════════════════ */
+
+  @media (max-width: 768px) {
+    .container { padding: 20px 14px; }
+  }
+
+  @media (max-width: 640px) {
+    /* Header */
+    .header {
+      height: auto; min-height: 56px; padding: 10px 16px;
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+    .header-icon { font-size: 22px; }
     .header h1 { font-size: 16px; }
-    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .header p { font-size: 10.5px; }
+    .header-badge { display: none; }
+
+    /* Tip bar */
+    .tip-bar { padding: 8px 14px; gap: 8px; }
+    .tip-bar-label { width: 100%; margin-right: 0; margin-bottom: 2px; }
+    .tip-btn { font-size: 10.5px; padding: 5px 9px; }
+    .tip-btn.tip-how { font-size: 11px; padding: 6px 12px; }
+
+    .container { padding: 16px 12px; }
+
+    /* Upload zone */
+    .upload-section { padding: 16px; }
+    .upload-zone { padding: 26px 14px; }
+    .upload-icon { font-size: 34px; margin-bottom: 8px; }
+    .upload-zone h3 { font-size: 13.5px; }
+    .upload-zone p { font-size: 11px; }
+    .upload-zone.has-file { flex-wrap: wrap; }
+    .upload-zone.has-file .fc-change { margin-left: 0; }
+
+    /* Buttons */
+    .btn-row { flex-direction: column; }
+    .btn-row .btn { width: 100%; justify-content: center; }
+
+    /* Summary stat cards */
+    .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 12px 14px; }
+    .stat-value { font-size: 22px; }
+
+    /* Search bar */
+    .search-bar { flex-wrap: wrap; padding: 10px 14px; row-gap: 8px; }
+    .search-bar input { min-width: 0; flex-basis: 100%; order: 1; }
+    .results-count { order: 2; width: 100%; text-align: right; }
+
+    /* Report cards */
+    .cards-grid { grid-template-columns: 1fr; gap: 14px; }
+    .rc-header { padding: 9px 12px; flex-wrap: wrap; gap: 6px; }
+    .rc-header-date { font-size: 9px; white-space: normal; }
+    /* Let the pivot table scroll horizontally instead of being clipped
+       by .report-card's overflow:hidden on narrow screens. */
+    .rc-pivot-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .rc-pivot-table thead tr th, .rc-pivot-table tbody tr td { white-space: nowrap; }
+    .rc-actions { flex-wrap: wrap; }
+    .rc-actions .btn { flex: 1; justify-content: center; min-width: 120px; }
+
+    /* AM breakdown panel */
+    .am-panel-header { padding: 11px 14px; flex-wrap: wrap; gap: 8px; }
+    .am-panel-actions { width: 100%; flex-wrap: wrap; }
+    .am-item-header { padding: 10px 14px; flex-wrap: wrap; row-gap: 6px; }
+    .am-name { flex-basis: 100%; }
+    .am-sups { padding-left: 20px; }
+    .am-sup-row { flex-wrap: wrap; row-gap: 4px; }
+    .am-sup-name { flex-basis: 100%; }
+    .am-sup-bar-wrap { width: 50px; }
+    .am-item-actions { padding-left: 20px; flex-wrap: wrap; }
+    .am-panel-footer { padding: 9px 14px; flex-wrap: wrap; gap: 4px; }
+
+    /* Tooltips / popovers stay on-screen */
+    .tip-popover { max-width: calc(100vw - 48px); min-width: 0; }
+
+    /* How-it-works modal */
+    .hiw-modal { width: 92%; max-height: 88vh; display: flex; flex-direction: column; }
+    .hiw-modal-body { max-height: none; flex: 1; padding: 16px; }
+    .hiw-modal-header { padding: 14px 16px; }
+    .hiw-field-grid { grid-template-columns: 1fr; }
+
+    /* Toast */
+    .copy-all-toast {
+      width: calc(100% - 32px); max-width: 360px;
+      white-space: normal; text-align: center;
+      bottom: max(24px, env(safe-area-inset-bottom));
+    }
+  }
+
+  @media (max-width: 400px) {
+    .header h1 { font-size: 14.5px; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat-value { font-size: 20px; }
+    .rc-title-block h2 { font-size: 11px; }
+    .am-sup-bar-wrap { display: none; }
   }
 
   /* ── AM Breakdown Panel ── */
