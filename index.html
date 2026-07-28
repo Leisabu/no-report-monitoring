@@ -989,6 +989,45 @@ body.light-mode .nrm-scope {
 .nrm-scope .tip-bar-label { font-family: 'DM Mono', monospace; font-size: 10.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; white-space: nowrap; }
 
 
+/* ── DATE FORMATTER TAB ── */
+.df-fmt-controls{padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.df-fmt-controls label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2)}
+.fmt-select{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--accent2);padding:7px 10px;font-family:'DM Mono',monospace;font-size:12px;outline:none;cursor:pointer}
+.fmt-select:focus{border-color:var(--accent)}
+.df-fmt-example{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)}
+.df-stats-strip{display:flex;border-top:1px solid var(--border)}
+.df-sstat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 12px 16px;gap:6px;border-right:1px solid var(--border)}
+.df-sstat:last-child{border-right:none}
+.df-sstat-val{font-family:'DM Mono',monospace;font-size:40px;font-weight:700;line-height:1;letter-spacing:-2px}
+.df-sstat-lbl{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3)}
+.df-sstat.s-rows  .df-sstat-val{color:var(--accent2)}
+.df-sstat.s-valid .df-sstat-val{color:var(--accent)}
+.df-sstat.s-warn  .df-sstat-val{color:var(--accent3)}
+.df-sstat.s-bad   .df-sstat-val{color:var(--danger)}
+.df-out-td{padding:0 12px!important;line-height:34px;font-family:'DM Mono',monospace;font-size:12px}
+.df-out-td.raw-col{color:var(--text2)}
+.df-out-td.fmt-col{color:var(--text3);font-size:11px}
+.df-out-td.date-col{color:var(--accent2);font-weight:500}
+.df-out-td.status-col{font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+.df-status-ok{color:var(--accent)}
+.df-status-warn{color:var(--accent3)}
+.df-status-bad{color:var(--danger)}
+td.df-row-warn{background:rgba(251,191,36,0.13)!important}
+td.df-row-bad{background:rgba(244,63,94,0.2)!important}
+.col-df-raw-in{width:320px}
+.col-df-raw{width:280px}
+.col-df-fmt{width:170px}
+.col-df-date{width:150px}
+.col-df-status{width:220px}
+.df-legend{display:flex;align-items:center;gap:14px;padding:9px 20px;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);border-top:1px solid var(--border);flex-wrap:wrap}
+.df-legend-dot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:4px}
+.df-ld-warn{background:rgba(251,191,36,.45)}.df-ld-bad{background:rgba(244,63,94,.5)}
+.df-assumptions{padding:14px 20px;font-size:11.5px;color:var(--text2);line-height:1.7;border-top:1px solid var(--border)}
+.df-assumptions b{color:var(--text)}
+.df-assumptions code{font-family:'DM Mono',monospace;background:var(--surface2);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;color:var(--accent2);font-size:10.5px}
+.btn-sample{background:var(--surface);color:var(--accent3);border:1px solid rgba(249,115,22,.3)}
+.btn-sample:hover{background:rgba(249,115,22,.08);transform:translateY(-1px)}
+
 </style>
 </head>
 <body class="light-mode">
@@ -1078,6 +1117,11 @@ body.light-mode .nrm-scope {
   <button class="nav-dropdown-item" data-tab="tab-distance">
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 13S1.8 8.2 1.8 4.9a5.2 5.2 0 1 1 10.4 0C12.2 8.2 7 13 7 13z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="7" cy="4.9" r="1.6" stroke="currentColor" stroke-width="1.2"/></svg>
     <span>Distance Checker</span>
+  </button>
+  <div class="nav-dropdown-sep"></div>
+  <button class="nav-dropdown-item" data-tab="tab-dateformatter">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M1.5 5.2h11" stroke="currentColor" stroke-width="1.3"/><path d="M4.3 1.5v-.8M9.7 1.5v-.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 7.6h1.6M7.2 7.6h1.6M4 10h1.6M7.2 10h1.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    <span>Date Formatter</span>
   </button>
 </div>
 
@@ -1750,6 +1794,134 @@ body.light-mode .nrm-scope {
 
 </div><!-- end tab-distance -->
 
+<div id="tab-dateformatter" class="tab-panel">
+
+  <!-- Input spreadsheet -->
+  <div class="card">
+    <div class="card-header">
+      <span class="section-num">01</span>
+      <h2>Input Dates</h2>
+      <span class="hint">paste a column from Excel · drag/shift+click to select · Del to clear</span>
+    </div>
+    <div class="table-wrap input-wrap" id="df-in-scroll">
+      <table class="ss-table" id="df-in-table">
+        <thead><tr>
+          <th class="rn-col">#</th>
+          <th class="col-df-raw-in">RAW DATE VALUE</th>
+        </tr></thead>
+        <tbody id="df-in-body"></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button class="btn btn-undo" id="df-in-undo" disabled title="Undo (Ctrl+Z)">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 5H8a3 3 0 0 1 0 6H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 3L2 5l2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Undo
+      </button>
+      <button class="btn btn-redo" id="df-in-redo" disabled title="Redo (Ctrl+Y)">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11 5H5a3 3 0 0 0 0 6h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 3l2 2-2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Redo
+      </button>
+      <div class="btn-sep"></div>
+      <button class="btn btn-clear" id="df-in-clear">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 2l9 9M11 2L2 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Clear Input
+      </button>
+      <button class="btn btn-sample" id="df-in-sample">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Load Sample Formats
+      </button>
+      <div class="add-row-btn" id="df-in-add-row" style="border-top:none;border-left:1px solid var(--border2);margin-left:4px;border-radius:6px;padding:7px 14px">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Add Row
+      </div>
+    </div>
+  </div>
+
+  <!-- Output format options -->
+  <div class="card">
+    <div class="card-header">
+      <span class="section-num">02</span>
+      <h2>Output Format</h2>
+      <span class="hint">applies to every row below</span>
+    </div>
+    <div class="df-fmt-controls">
+      <div>
+        <label style="display:block;margin-bottom:6px">Target Format</label>
+        <select class="fmt-select" id="df-out-format">
+          <option value="M/D/YYYY" selected>M/D/YYYY  (no leading zeros)</option>
+          <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+          <option value="YYYY-MM-DD">YYYY-MM-DD  (ISO)</option>
+          <option value="MM-DD-YYYY">MM-DD-YYYY</option>
+          <option value="D-Mon-YYYY">D-Mon-YYYY</option>
+          <option value="Month D, YYYY">Month D, YYYY</option>
+        </select>
+      </div>
+      <div class="df-fmt-example" id="df-out-example">Example output: 3/14/2024</div>
+    </div>
+    <div class="df-stats-strip">
+      <div class="df-sstat s-rows"><div class="df-sstat-val" id="df-st-rows">0</div><div class="df-sstat-lbl">Rows</div></div>
+      <div class="df-sstat s-valid"><div class="df-sstat-val" id="df-st-valid">0</div><div class="df-sstat-lbl">Formatted</div></div>
+      <div class="df-sstat s-warn"><div class="df-sstat-val" id="df-st-warn">0</div><div class="df-sstat-lbl">Assumed</div></div>
+      <div class="df-sstat s-bad"><div class="df-sstat-val" id="df-st-bad">0</div><div class="df-sstat-lbl">Invalid</div></div>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="card">
+    <div class="card-header">
+      <span class="section-num">03</span>
+      <h2>Formatted Output</h2>
+      <span class="hint" id="df-out-count">paste dates above to see results</span>
+    </div>
+    <div class="table-wrap output-wrap" id="df-out-scroll">
+      <div class="empty-state" id="df-out-empty">
+        <svg width="32" height="32" viewBox="0 0 36 36" fill="none"><rect x="4" y="4" width="28" height="28" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M4 12h28M12 4v28" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div>Paste or type dates in the input above to see formatted output here.</div>
+      </div>
+      <table class="ss-table" id="df-out-table" style="display:none">
+        <thead><tr>
+          <th class="rn-col">#</th>
+          <th class="col-df-raw">RAW INPUT</th>
+          <th class="col-df-fmt">DETECTED FORMAT</th>
+          <th class="col-df-date">FORMATTED DATE</th>
+          <th class="col-df-status">STATUS / NOTE</th>
+        </tr></thead>
+        <tbody id="df-out-body"></tbody>
+      </table>
+    </div>
+    <div class="df-legend">
+      <span><span class="df-legend-dot df-ld-warn"></span>amber = date parsed but an assumption was made (year/century)</span>
+      <span><span class="df-legend-dot df-ld-bad"></span>red = could not be parsed as a date</span>
+    </div>
+    <div class="actions">
+      <button class="btn btn-copy" id="df-out-copy" disabled>
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4 4V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Copy Output (formatted only)
+      </button>
+      <button class="btn btn-export" id="df-out-export" disabled>
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 9V1M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Export CSV (all columns)
+      </button>
+      <button class="btn btn-clear" id="df-out-clear" disabled style="margin-left:auto">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 2l9 9M11 2L2 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Clear Output
+      </button>
+    </div>
+    <div class="status-bar">
+      <span>Total rows: <span class="sbar-val" id="df-sbar-total">0</span></span>
+      <span style="margin-left:auto;font-size:10px">Copy Output = formatted date column only, no headers</span>
+    </div>
+    <div class="df-assumptions">
+      <b>How ambiguous dates are handled:</b> weekday names/prefixes (<code>Thu,</code> <code>Thursday</code>) and clock times are stripped before parsing.
+      All-numeric slash/dot dates use the 4-digit year (or year-like part) to anchor the format, then decide month-vs-day order by magnitude — if one part is &gt;12 it's treated as the day; when genuinely ambiguous (e.g. <code>3/14/24</code>) it defaults to <b>month/day</b> (US convention), while dot-separated dates (e.g. <code>14.03.2024</code>) default to <b>day.month</b> (European convention).
+      2-digit years use the standard pivot: <code>00–68 → 2000s</code>, <code>69–99 → 1900s</code>.
+      Values missing a year (e.g. <code>Mar 14</code>) assume the current year and are flagged amber. Values with a month+year but no day (e.g. <code>Mar-24</code>), weekday-only text, blank cells, or unrecognized text are flagged red as invalid — a specific day can't be inferred.
+      Excel serial date numbers (e.g. <code>45365</code>) pasted from a cell that lost its date formatting are also detected and converted automatically.
+    </div>
+  </div>
+
+</div><!-- end tab-dateformatter -->
+
 </div><!-- .main -->
 <div id="toast"></div>
 
@@ -2318,6 +2490,314 @@ document.getElementById('fmt-clear-output').addEventListener('click',()=>{
 });
 
 // ═══════════════════════════════════════════════════════════════
+//  DATE FORMATTER TAB
+// ═══════════════════════════════════════════════════════════════
+const DF_MONTHS = {
+  jan:1,january:1, feb:2,february:2, mar:3,march:3, apr:4,april:4,
+  may:5, jun:6,june:6, jul:7,july:7, aug:8,august:8,
+  sep:9,sept:9,september:9, oct:10,october:10, nov:11,november:11, dec:12,december:12
+};
+const DF_MONTH_NAMES = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+const DF_WEEKDAY_RE = /^(sun|mon|tue|wed|thu|fri|sat)[a-z]*\.?,?\s*/i;
+const DF_TIME_TAIL_RE = /[,\s]+(\d{1,2}:\d{2}(:\d{2})?\s*(am|pm|AM|PM)?)\s*$/;
+const DF_TIME_ISO_TAIL_RE = /[T\s](\d{2}:\d{2}:\d{2})$/;
+const DF_ORDINAL_RE = /(\d)(st|nd|rd|th)/gi;
+
+function dfDaysInMonth(y,m){ return new Date(y,m,0).getDate(); }
+
+function dfExpandYear(yy){
+  yy = parseInt(yy,10);
+  if(yy>=100) return yy;
+  return yy<=68 ? 2000+yy : 1900+yy;
+}
+
+function dfExcelSerialToDate(n){
+  const epoch = new Date(Date.UTC(1899,11,30));
+  const ms = epoch.getTime() + n*86400000;
+  return new Date(ms);
+}
+
+function dfIsValidYMD(y,m,d){
+  if(m<1||m>12) return false;
+  if(d<1||d>dfDaysInMonth(y,m)) return false;
+  if(y<1000||y>3000) return false;
+  return true;
+}
+
+// returns {date:Date|null, method:string, note:string, level:'ok'|'warn'|'bad'}
+function dfParseFlexibleDate(rawInput){
+  let s = (rawInput||'').trim();
+  if(!s) return {date:null, method:'—', note:'Empty cell', level:'bad'};
+
+  s = s.replace(DF_ORDINAL_RE,'$1');
+  const strippedWeekday = DF_WEEKDAY_RE.test(s);
+  s = s.replace(DF_WEEKDAY_RE,'').trim();
+
+  let hadTime = false;
+  if(DF_TIME_ISO_TAIL_RE.test(s)){ s = s.replace(DF_TIME_ISO_TAIL_RE,'').trim(); hadTime=true; }
+  else if(DF_TIME_TAIL_RE.test(s)){ s = s.replace(DF_TIME_TAIL_RE,'').trim(); hadTime=true; }
+  s = s.replace(/,\s*$/,'').trim();
+
+  if(!s){
+    return {date:null, method:'weekday/time only', note: strippedWeekday? 'Only a weekday name — no date':'No date found', level:'bad'};
+  }
+
+  if(/^(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|wed|thu|fri|sat)\.?$/i.test(s)){
+    return {date:null, method:'weekday only', note:'Only a weekday name — no date', level:'bad'};
+  }
+
+  if(/^\d{4,6}(\.0+)?$/.test(s)){
+    const n = parseFloat(s);
+    if(n>=1 && n<=100000){
+      const d = dfExcelSerialToDate(Math.round(n));
+      if(!isNaN(d.getTime())){
+        return {date:d, method:'Excel serial number', note:'Interpreted as Excel serial date', level:'warn'};
+      }
+    }
+  }
+
+  let m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
+  if(m){
+    const y=+m[1], mo=+m[2], d=+m[3];
+    if(dfIsValidYMD(y,mo,d)) return {date:new Date(y,mo-1,d), method:'YYYY-MM-DD (ISO)', note: hadTime?'Time portion discarded':'', level:'ok'};
+    return {date:null, method:'YYYY-MM-DD (ISO)', note:'Month or day out of range', level:'bad'};
+  }
+
+  m = s.match(/^([A-Za-z]{3,9})[-\/](\d{2,4})$/);
+  if(m && DF_MONTHS[m[1].toLowerCase()]){
+    return {date:null, method:'Mon-YYYY (no day)', note:'Month & year only — day cannot be inferred', level:'bad'};
+  }
+
+  m = s.match(/^(\d{1,2})[-\s]+([A-Za-z]{3,9})\.?[-\s,]+(\d{2,4})$/);
+  if(m && DF_MONTHS[m[2].toLowerCase()]){
+    const d=+m[1], mo=DF_MONTHS[m[2].toLowerCase()]; let y=+m[3];
+    const twoDigitYear = m[3].length<=2;
+    y = dfExpandYear(y);
+    if(dfIsValidYMD(y,mo,d)) return {date:new Date(y,mo-1,d), method:'D-Mon-YYYY', note: twoDigitYear? `2-digit year assumed as ${y}`:(hadTime?'Time portion discarded':''), level: twoDigitYear?'warn':'ok'};
+    return {date:null, method:'D-Mon-YYYY', note:'Invalid day for that month', level:'bad'};
+  }
+  m = s.match(/^([A-Za-z]{3,9})\.?[-\s]+(\d{1,2}),?\s+(\d{2,4})$/);
+  if(m && DF_MONTHS[m[1].toLowerCase()]){
+    const mo=DF_MONTHS[m[1].toLowerCase()], d=+m[2]; let y=+m[3];
+    const twoDigitYear = m[3].length<=2;
+    y = dfExpandYear(y);
+    if(dfIsValidYMD(y,mo,d)) return {date:new Date(y,mo-1,d), method:'Month D, YYYY', note: twoDigitYear? `2-digit year assumed as ${y}`:(hadTime?'Time portion discarded':''), level: twoDigitYear?'warn':'ok'};
+    return {date:null, method:'Month D, YYYY', note:'Invalid day for that month', level:'bad'};
+  }
+
+  m = s.match(/^([A-Za-z]{3,9})\.?\s+(\d{1,2})$/);
+  if(m && DF_MONTHS[m[1].toLowerCase()]){
+    const mo=DF_MONTHS[m[1].toLowerCase()], d=+m[2], y=new Date().getFullYear();
+    if(dfIsValidYMD(y,mo,d)) return {date:new Date(y,mo-1,d), method:'Month D (no year)', note:`Year missing — assumed current year (${y})`, level:'warn'};
+    return {date:null, method:'Month D (no year)', note:'Invalid day for that month', level:'bad'};
+  }
+
+  m = s.match(/^(\d{1,2})\s+([A-Za-z]{3,9})\.?,?\s+(\d{2,4})$/);
+  if(m && DF_MONTHS[m[2].toLowerCase()]){
+    const d=+m[1], mo=DF_MONTHS[m[2].toLowerCase()]; let y=+m[3];
+    const twoDigitYear = m[3].length<=2;
+    y = dfExpandYear(y);
+    if(dfIsValidYMD(y,mo,d)) return {date:new Date(y,mo-1,d), method:'D Month YYYY', note: twoDigitYear? `2-digit year assumed as ${y}`:(hadTime?'Time portion discarded':''), level: twoDigitYear?'warn':'ok'};
+    return {date:null, method:'D Month YYYY', note:'Invalid day for that month', level:'bad'};
+  }
+
+  m = s.match(/^(\d{1,2})\s+([A-Za-z]{3,9})\.?$/);
+  if(m && DF_MONTHS[m[2].toLowerCase()]){
+    const d=+m[1], mo=DF_MONTHS[m[2].toLowerCase()], y=new Date().getFullYear();
+    if(dfIsValidYMD(y,mo,d)) return {date:new Date(y,mo-1,d), method:'D Month (no year)', note:`Year missing — assumed current year (${y})`, level:'warn'};
+    return {date:null, method:'D Month (no year)', note:'Invalid day for that month', level:'bad'};
+  }
+
+  m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if(m){
+    let a=+m[1], b=+m[2], y=+m[3];
+    const twoDigitYear = m[3].length<=2;
+    y = dfExpandYear(y);
+    let d, mo, note='';
+    if(a>12 && b<=12){ d=a; mo=b; }
+    else if(b>12 && a<=12){ mo=a; d=b; note='Ambiguous order resolved by magnitude'; }
+    else { d=a; mo=b; note='Dot format — assumed day.month (European)'; }
+    if(dfIsValidYMD(y,mo,d)){
+      const lvl = (twoDigitYear||note) ? 'warn' : 'ok';
+      const noteParts=[note]; if(twoDigitYear) noteParts.push(`2-digit year assumed as ${y}`);
+      return {date:new Date(y,mo-1,d), method:'D.M.YYYY', note:noteParts.filter(Boolean).join('; '), level:lvl};
+    }
+    [d,mo]=[b,a];
+    if(dfIsValidYMD(y,mo,d)) return {date:new Date(y,mo-1,d), method:'D.M.YYYY (swapped)', note:'Reinterpreted after first order was invalid', level:'warn'};
+    return {date:null, method:'D.M.YYYY', note:'Month or day out of range', level:'bad'};
+  }
+
+  m = s.match(/^(\d{1,4})[-\/](\d{1,4})[-\/](\d{1,4})$/);
+  if(m){
+    let p1=m[1], p2=m[2], p3=m[3];
+    let y,mo,d,note='',twoDigitYear=false;
+    if(p1.length===4){
+      y=+p1; let a=+p2,b=+p3;
+      if(a>12&&b<=12){ d=a; mo=b; note='Y/D/M order (day exceeded 12)'; } else { mo=a; d=b; }
+    } else if(p3.length===4 || p3.length===2){
+      y=+p3; twoDigitYear = p3.length===2;
+      let a=+p1,b=+p2;
+      if(a>12 && b<=12){ d=a; mo=b; note='Day-first order (first part exceeded 12)'; }
+      else if(b>12 && a<=12){ mo=a; d=b; note='Month-first order (second part exceeded 12)'; }
+      else { mo=a; d=b; note='Ambiguous order — assumed month/day (US convention)'; }
+      y = dfExpandYear(y);
+    } else {
+      return {date:null, method:'numeric date', note:'Could not locate a 4-digit or valid 2-digit year', level:'bad'};
+    }
+    if(dfIsValidYMD(y,mo,d)){
+      const lvl = (twoDigitYear || note) ? 'warn' : 'ok';
+      const noteParts=[note]; if(twoDigitYear) noteParts.push(`2-digit year assumed as ${y}`);
+      return {date:new Date(y,mo-1,d), method: p1.length===4?'YYYY/M/D':'M/D/YYYY or D/M/YYYY', note:noteParts.filter(Boolean).join('; '), level:lvl};
+    }
+    return {date:null, method:'numeric date', note:'Month or day out of range', level:'bad'};
+  }
+
+  const native = new Date(s);
+  if(!isNaN(native.getTime()) && /[A-Za-z]/.test(s)){
+    return {date:native, method:'native fallback parser', note: hadTime?'Time portion discarded':'Parsed via fallback — verify', level:'warn'};
+  }
+
+  return {date:null, method:'unrecognized', note:'Format not recognized', level:'bad'};
+}
+
+function dfFormatOutput(date, fmt){
+  const y=date.getFullYear(), mo=date.getMonth()+1, d=date.getDate();
+  const pad=n=>String(n).padStart(2,'0');
+  switch(fmt){
+    case 'M/D/YYYY': return `${mo}/${d}/${y}`;
+    case 'MM/DD/YYYY': return `${pad(mo)}/${pad(d)}/${y}`;
+    case 'YYYY-MM-DD': return `${y}-${pad(mo)}-${pad(d)}`;
+    case 'MM-DD-YYYY': return `${pad(mo)}-${pad(d)}-${y}`;
+    case 'D-Mon-YYYY': return `${d}-${DF_MONTH_NAMES[mo].slice(0,3)}-${y}`;
+    case 'Month D, YYYY': return `${DF_MONTH_NAMES[mo]} ${d}, ${y}`;
+    default: return `${mo}/${d}/${y}`;
+  }
+}
+
+const DF_FORMAT_EXAMPLES = {
+  'M/D/YYYY':'3/14/2024', 'MM/DD/YYYY':'03/14/2024', 'YYYY-MM-DD':'2024-03-14',
+  'MM-DD-YYYY':'03-14-2024', 'D-Mon-YYYY':'14-Mar-2024', 'Month D, YYYY':'March 14, 2024'
+};
+
+const DF_IN_COLS = [{key:'raw', cls:'col-df-raw-in'}];
+const dfInUndo=document.getElementById('df-in-undo'), dfInRedo=document.getElementById('df-in-redo');
+const dfInSS = makeSpreadsheet({
+  bodyId:'df-in-body', scrollId:'df-in-scroll', cols:DF_IN_COLS,
+  undoBtn:dfInUndo, redoBtn:dfInRedo,
+  onchange: dfScheduleRender
+});
+for(let i=0;i<8;i++) dfInSS.addRow(null,true);
+
+document.getElementById('df-in-add-row').addEventListener('click',()=>{ dfInSS.addRow(null,true); });
+document.getElementById('df-in-clear').addEventListener('click',()=>{ dfInSS.clearAll(); showToast('Input cleared','success'); });
+
+document.getElementById('df-in-sample').addEventListener('click',()=>{
+  dfInSS.saveUndo();
+  const samples = [
+    'Thu, 03/14/2024', '3/14/24', '14/03/2024', '2024-03-14', '14.03.2024',
+    '14-Mar-24', '14-Mar-2024', 'Mar 14', 'Mar 14, 2024', 'March 14, 2024',
+    '14 March 2024', '14 Mar 2024', 'Thu 14/03/2024', 'Thursday, March 14, 2024',
+    '03/14/2024 02:30 PM', '2024-03-14 14:30:00', 'Mar-24', 'Thursday', '', '45365'
+  ];
+  const tbody=document.getElementById('df-in-body');
+  while(tbody.rows.length < samples.length) dfInSS.addRow(null,true);
+  samples.forEach((v,i)=>{ tbody.rows[i].querySelector('input').value=v; });
+  for(let i=samples.length;i<tbody.rows.length;i++){ tbody.rows[i].querySelector('input').value=''; }
+  dfScheduleRender();
+  showToast('✓ Sample formats loaded','success');
+});
+
+document.getElementById('df-out-format').addEventListener('change', ()=>{
+  document.getElementById('df-out-example').textContent = 'Example output: ' + DF_FORMAT_EXAMPLES[document.getElementById('df-out-format').value];
+  dfScheduleRender();
+});
+
+let dfRenderT;
+function dfScheduleRender(){ clearTimeout(dfRenderT); dfRenderT=setTimeout(dfRenderOutput,80); }
+
+let dfOutData = [];
+
+function dfRenderOutput(){
+  const rows = dfInSS.readRows();
+  const fmt = document.getElementById('df-out-format').value;
+  const outBody = document.getElementById('df-out-body');
+  const outTable = document.getElementById('df-out-table');
+  const outEmpty = document.getElementById('df-out-empty');
+  const outCount = document.getElementById('df-out-count');
+
+  if(!rows.length){
+    outTable.style.display='none'; outEmpty.style.display='block';
+    outCount.textContent='paste dates above to see results';
+    document.getElementById('df-out-copy').disabled=true;
+    document.getElementById('df-out-export').disabled=true;
+    document.getElementById('df-out-clear').disabled=true;
+    dfUpdateStats(0,0,0,0);
+    document.getElementById('df-sbar-total').textContent='0';
+    dfOutData=[];
+    return;
+  }
+
+  outTable.style.display='table'; outEmpty.style.display='none';
+  outBody.innerHTML='';
+  dfOutData=[];
+  let valid=0, warn=0, bad=0;
+
+  rows.forEach((row,i)=>{
+    const result = dfParseFlexibleDate(row.raw);
+    let formatted = '';
+    let statusText, statusClass, rowClass='';
+    if(result.date && result.level!=='bad'){
+      formatted = dfFormatOutput(result.date, fmt);
+      if(result.level==='warn'){ warn++; statusText = result.note||'Assumption made'; statusClass='df-status-warn'; rowClass='df-row-warn'; }
+      else { valid++; statusText = result.note || 'OK'; statusClass='df-status-ok'; }
+    } else {
+      bad++; statusText = result.note || 'Could not parse'; statusClass='df-status-bad'; rowClass='df-row-bad';
+    }
+
+    const tr=document.createElement('tr');
+    const tdRn=document.createElement('td'); tdRn.className='rn'; tdRn.textContent=i+1; tr.appendChild(tdRn);
+
+    const tdRaw=document.createElement('td'); tdRaw.className='df-out-td raw-col'+(rowClass?' '+rowClass:''); tdRaw.textContent=row.raw; tr.appendChild(tdRaw);
+    const tdFmt=document.createElement('td'); tdFmt.className='df-out-td fmt-col'+(rowClass?' '+rowClass:''); tdFmt.textContent=result.method; tr.appendChild(tdFmt);
+    const tdDate=document.createElement('td'); tdDate.className='df-out-td date-col'+(rowClass?' '+rowClass:''); tdDate.textContent=formatted; tr.appendChild(tdDate);
+    const tdStatus=document.createElement('td'); tdStatus.className='df-out-td status-col '+statusClass+(rowClass?' '+rowClass:''); tdStatus.textContent=statusText; tr.appendChild(tdStatus);
+
+    outBody.appendChild(tr);
+    dfOutData.push({raw:row.raw, format:result.method, formatted, status:statusText});
+  });
+
+  outCount.textContent = `${rows.length} row${rows.length===1?'':'s'} · ${valid} formatted · ${warn} assumed · ${bad} invalid`;
+  document.getElementById('df-sbar-total').textContent = rows.length;
+  dfUpdateStats(rows.length, valid, warn, bad);
+
+  const anyGood = (valid+warn)>0;
+  document.getElementById('df-out-copy').disabled = !anyGood;
+  document.getElementById('df-out-export').disabled = false;
+  document.getElementById('df-out-clear').disabled = false;
+}
+
+function dfUpdateStats(rows,valid,warn,bad){
+  document.getElementById('df-st-rows').textContent=rows;
+  document.getElementById('df-st-valid').textContent=valid;
+  document.getElementById('df-st-warn').textContent=warn;
+  document.getElementById('df-st-bad').textContent=bad;
+}
+
+document.getElementById('df-out-copy').addEventListener('click',()=>{
+  const good = dfOutData.filter(r=>r.formatted);
+  copyTSV(good, ['formatted']);
+});
+document.getElementById('df-out-export').addEventListener('click',()=>{
+  exportCSV(dfOutData, ['raw','format','formatted','status'], ['Raw Input','Detected Format','Formatted Date','Status / Note'], 'formatted_dates.csv');
+});
+document.getElementById('df-out-clear').addEventListener('click',()=>{
+  dfInSS.clearAll();
+  showToast('Output cleared','success');
+});
+
+dfScheduleRender();
+
+// ═══════════════════════════════════════════════════════════════
 //  TAB SWITCHING
 // ═══════════════════════════════════════════════════════════════
 const FORMATTER_GROUP_TABS=['tab-format','tab-supervisors','tab-perstore','tab-multistore'];
@@ -2353,6 +2833,7 @@ function switchTab(tabId){
   if(tabId==='tab-dbchk-multistore') renderMultiStoreTabDbchk();
   if(tabId==='tab-distance') renderDistanceChecker();
   if(tabId==='tab-imgtotext') initImageToText();
+  if(tabId==='tab-dateformatter') dfScheduleRender();
   closeNavDropdown();
 }
 document.querySelectorAll('.tab-btn, .nav-dropdown-item').forEach(btn=>{
