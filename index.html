@@ -1028,6 +1028,82 @@ td.df-row-bad{background:rgba(244,63,94,0.2)!important}
 .btn-sample{background:var(--surface);color:var(--accent3);border:1px solid rgba(249,115,22,.3)}
 .btn-sample:hover{background:rgba(249,115,22,.08);transform:translateY(-1px)}
 
+/* ── TCR SUMMARY TAB ── */
+.tcr-scope{padding:24px 32px 60px;display:flex;flex-direction:column;gap:20px}
+.tcr-head{display:flex;align-items:center;gap:14px}
+.tcr-head-icon{font-size:26px;line-height:1}
+.tcr-head h1{font-family:'DM Sans',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.3px}
+.tcr-head p{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* inputs */
+.tcr-inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.tcr-drop{border:2px dashed var(--border2);background:var(--surface);border-radius:10px;padding:22px 18px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:background .15s,border-color .15s;text-align:center}
+.tcr-drop:hover{border-color:var(--accent);background:var(--cell-focus)}
+.tcr-drop.drag-over{border-color:var(--accent2);background:var(--sel-bg)}
+.tcr-drop.loaded{border-style:solid;border-color:var(--accent)}
+.tcr-drop-icon{font-size:22px;line-height:1}
+.tcr-drop-title{font-weight:700;font-size:13px;color:var(--text)}
+.tcr-drop-sub{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3);line-height:1.6}
+.tcr-drop-file{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);font-weight:500;overflow-wrap:anywhere}
+.tcr-drop input[type=file]{display:none}
+
+/* controls */
+.tcr-controls{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+.tcr-field{display:flex;flex-direction:column;gap:5px}
+.tcr-field label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.4px;text-transform:uppercase;color:var(--text3)}
+.tcr-field select,.tcr-field input{font-family:'DM Sans',sans-serif;font-size:12.5px;padding:7px 10px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:6px;min-width:120px}
+.tcr-field select:focus,.tcr-field input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tcr-ctl-spacer{margin-left:auto;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+
+/* stat cards */
+.tcr-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tcr-stat{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:15px 16px 13px;overflow:hidden}
+.tcr-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.tcr-stat.a::before{background:var(--accent)}
+.tcr-stat.b::before{background:var(--accent2)}
+.tcr-stat.c::before{background:var(--accent3)}
+.tcr-stat.d::before{background:var(--accent4)}
+.tcr-stat.warn::before{background:var(--danger)}
+.tcr-stat-label{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.tcr-stat-value{font-family:'DM Sans',sans-serif;font-size:23px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;line-height:1.1}
+.tcr-stat-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--text2);margin-top:3px}
+
+/* result blocks */
+.tcr-block{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.tcr-block-head{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;row-gap:8px}
+.tcr-block-head h3{font-family:'DM Sans',sans-serif;font-size:14.5px;font-weight:800;color:var(--accent)}
+.tcr-block-note{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3);flex:1 1 auto;min-width:0}
+.tcr-block-actions{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.tcr-tbl-scroll{overflow-x:auto;max-height:640px;overflow-y:auto}
+.tcr-tbl{border-collapse:separate;border-spacing:0;width:100%;font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tcr-tbl th,.tcr-tbl td{padding:6px 10px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.tcr-tbl thead th{position:sticky;background:var(--header-bg);color:var(--text2);font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;font-weight:600;text-align:center;z-index:3}
+.tcr-tbl thead tr:first-child th{top:0}
+.tcr-tbl thead tr:nth-child(2) th{top:26px}
+.tcr-tbl thead th.grp{color:var(--accent2);border-bottom:1px solid var(--border2)}
+.tcr-tbl tbody tr:nth-child(even){background:var(--row-even)}
+.tcr-tbl tbody tr:nth-child(odd){background:var(--row-odd)}
+.tcr-tbl tbody tr:hover{background:var(--row-hover)}
+.tcr-tbl td.txt{text-align:left;color:var(--text)}
+.tcr-tbl td.num{text-align:right;color:var(--text2)}
+.tcr-tbl td.num.zero{color:var(--text3)}
+.tcr-tbl td.pct{text-align:right;font-weight:700}
+.tcr-tbl td.divider,.tcr-tbl th.divider{border-right:2px solid var(--border2)}
+.tcr-tbl tbody tr.total-row{background:var(--surface2)!important;font-weight:800}
+.tcr-tbl tbody tr.total-row td{border-top:2px solid var(--border2);color:var(--text)}
+.tcr-pct-hi{color:var(--accent)}
+.tcr-pct-mid{color:var(--accent3)}
+.tcr-pct-lo{color:var(--danger)}
+.tcr-empty{padding:40px 20px;text-align:center;color:var(--text3);font-size:12.5px}
+.tcr-empty .ico{font-size:30px;display:block;margin-bottom:8px}
+
+/* unmatched warning */
+.tcr-warn{background:var(--surface);border:1px solid rgba(244,63,94,.35);border-left:3px solid var(--danger);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+.tcr-warn-title{font-weight:800;font-size:12.5px;color:var(--danger);display:flex;align-items:center;gap:7px}
+.tcr-warn p{font-size:11.5px;color:var(--text2);line-height:1.6}
+.tcr-warn ul{margin:2px 0 0 18px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);line-height:1.8}
+.tcr-warn-more{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3);font-style:italic}
+
 </style>
 </head>
 <body class="light-mode">
@@ -1055,6 +1131,11 @@ td.df-row-bad{background:rgba(244,63,94,0.2)!important}
   <button class="nav-dropdown-item" data-tab="tab-noreport">
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2.5" y="1.5" width="9" height="11" rx="1.3" stroke="currentColor" stroke-width="1.3"/><path d="M5 1.5h4v1.4H5z" fill="currentColor"/><path d="M4.5 6.5h5M4.5 8.5h5M4.5 10.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
     <span>No Report Monitoring</span>
+  </button>
+  <div class="nav-dropdown-sep"></div>
+  <button class="nav-dropdown-item" data-tab="tab-tcr">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M4 10V7M7 10V4.5M10 10V8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    <span>TCR Summary</span>
   </button>
   <div class="nav-dropdown-sep"></div>
   <div class="nav-dropdown-group expanded" id="nav-dropdown-group-formatter">
@@ -1388,6 +1469,118 @@ td.df-row-bad{background:rgba(244,63,94,0.2)!important}
 
 </div>
 </div><!-- end tab-noreport -->
+
+<div id="tab-tcr" class="tab-panel">
+<div class="tcr-scope">
+
+  <div class="tcr-head">
+    <div class="tcr-head-icon">📊</div>
+    <div>
+      <h1>TCR Summary Builder</h1>
+      <p>Builds the monthly compliance summary — per OM and per FMS — straight from the audit export. No copying between sheets.</p>
+    </div>
+  </div>
+
+  <!-- Step 1: inputs -->
+  <div class="tcr-inputs">
+    <div class="tcr-drop" id="tcr-drop-audit">
+      <div class="tcr-drop-icon">📥</div>
+      <div class="tcr-drop-title">1 · Audit export</div>
+      <div class="tcr-drop-sub">MY TEAM SUMMARY REPORT<br>one row per store visit &nbsp;·&nbsp; .xlsx or .csv</div>
+      <div class="tcr-drop-file" id="tcr-file-audit"></div>
+      <input type="file" id="tcr-input-audit" accept=".xlsx,.xls,.csv">
+    </div>
+    <div class="tcr-drop" id="tcr-drop-store">
+      <div class="tcr-drop-icon">🏬</div>
+      <div class="tcr-drop-title">2 · Store database</div>
+      <div class="tcr-drop-sub">STORE DATABASE<br>one row per store — sets the targets &nbsp;·&nbsp; .xlsx or .csv</div>
+      <div class="tcr-drop-file" id="tcr-file-store"></div>
+      <input type="file" id="tcr-input-store" accept=".xlsx,.xls,.csv">
+    </div>
+  </div>
+
+  <!-- Step 2: controls -->
+  <div class="tcr-controls">
+    <div class="tcr-field">
+      <label for="tcr-month">Month</label>
+      <select id="tcr-month">
+        <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+        <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+        <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+        <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+      </select>
+    </div>
+    <div class="tcr-field">
+      <label for="tcr-year">Year</label>
+      <input type="number" id="tcr-year" min="2000" max="2100" step="1">
+    </div>
+    <div class="tcr-field">
+      <label for="tcr-weekmode">Week split</label>
+      <select id="tcr-weekmode">
+        <option value="cal">Calendar weeks (Mon–Sun)</option>
+        <option value="dom">Day of month (1-7, 8-14…)</option>
+      </select>
+    </div>
+    <div class="tcr-field">
+      <label for="tcr-attrib">Credit visit to</label>
+      <select id="tcr-attrib">
+        <option value="assigned">Store's assigned FMS</option>
+        <option value="uploader">Whoever uploaded it</option>
+      </select>
+    </div>
+    <div class="tcr-field">
+      <label for="tcr-doorfilter">Door scope</label>
+      <select id="tcr-doorfilter">
+        <option value="both">PS + NON PS</option>
+        <option value="ps">PS doors only</option>
+        <option value="nonps">NON PS doors only</option>
+      </select>
+    </div>
+    <div class="tcr-ctl-spacer">
+      <button class="btn btn-primary" id="tcr-build">⚙️ Build Summary</button>
+      <button class="btn btn-danger" id="tcr-reset">🔄 Reset</button>
+    </div>
+  </div>
+
+  <div id="tcr-warn-wrap"></div>
+
+  <!-- Step 3: results -->
+  <div id="tcr-results" style="display:none;flex-direction:column;gap:20px">
+
+    <div class="tcr-stats" id="tcr-stats"></div>
+
+    <div class="tcr-block">
+      <div class="tcr-block-head">
+        <h3>Per OM</h3>
+        <span class="tcr-block-note">Weekly columns count <b>visits</b>. Compliance columns count <b>distinct stores</b> for the month.</span>
+        <div class="tcr-block-actions">
+          <button class="btn btn-secondary" id="tcr-export-om">⬇️ Export XLSX</button>
+        </div>
+      </div>
+      <div class="tcr-tbl-scroll"><table class="tcr-tbl" id="tcr-tbl-om"></table></div>
+    </div>
+
+    <div class="tcr-block">
+      <div class="tcr-block-head">
+        <h3>Per FMS</h3>
+        <span class="tcr-block-note">Same measures, broken down to AREA → OM → AM → FMS.</span>
+        <div class="tcr-block-actions">
+          <button class="btn btn-secondary" id="tcr-export-fms">⬇️ Export XLSX</button>
+          <button class="btn btn-primary" id="tcr-export-all">📗 Export Full Workbook</button>
+        </div>
+      </div>
+      <div class="tcr-tbl-scroll"><table class="tcr-tbl" id="tcr-tbl-fms"></table></div>
+    </div>
+
+  </div>
+
+  <div class="tcr-empty" id="tcr-empty">
+    <span class="ico">📊</span>
+    Upload both files above, then press <b>Build Summary</b>.
+  </div>
+
+</div>
+</div><!-- end tab-tcr -->
 
 <div id="tab-format" class="tab-panel active">
 
@@ -2796,6 +2989,747 @@ document.getElementById('df-out-clear').addEventListener('click',()=>{
 });
 
 dfScheduleRender();
+
+// ═══════════════════════════════════════════════════════════════
+//  TCR SUMMARY BUILDER
+//  Joins the audit export to the store database, buckets visits
+//  into weeks, and produces the per-OM / per-FMS compliance
+//  summary that was previously typed by hand.
+// ═══════════════════════════════════════════════════════════════
+let tcrAuditTable = null;   // {headers:[], rows:[[]]}
+let tcrStoreTable = null;
+let tcrResult     = null;   // last built summary
+
+// ── file reading ────────────────────────────────────────────────
+
+// ExcelJS cell values can be dates, formula objects, rich text or
+// hyperlink objects — flatten them all to a primitive.
+function tcrCellVal(v){
+  if(v===null||v===undefined) return '';
+  if(v instanceof Date) return v;
+  if(typeof v==='object'){
+    if(v.result!==undefined)      return tcrCellVal(v.result);
+    if(Array.isArray(v.richText)) return v.richText.map(t=>t.text).join('');
+    if(v.text!==undefined)        return v.text;
+    if(v.hyperlink!==undefined)   return v.hyperlink;
+    if(v.error!==undefined)       return '';
+    return '';
+  }
+  return v;
+}
+
+function tcrNormHeader(s){ return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+
+// Returns the index of the first header matching any candidate — exact
+// match first across all candidates, then a containment fallback.
+function tcrFindCol(headers, candidates){
+  const H = headers.map(tcrNormHeader);
+  for(const cand of candidates){
+    const i = H.indexOf(tcrNormHeader(cand));
+    if(i>=0) return i;
+  }
+  for(const cand of candidates){
+    const c = tcrNormHeader(cand);
+    if(c.length<4) continue;
+    const i = H.findIndex(h=>h.includes(c));
+    if(i>=0) return i;
+  }
+  return -1;
+}
+
+// How many of `probes` appear in a candidate header row — used to pick
+// both the right worksheet and the right header row inside it.
+function tcrScoreHeaderRow(row, probes){
+  const H = row.map(tcrNormHeader).filter(Boolean);
+  let score = 0;
+  for(const p of probes){ if(H.includes(tcrNormHeader(p))) score++; }
+  return score;
+}
+
+// Scans the first 15 rows for the best header row, returns {headers, rows}.
+function tcrSliceAtHeader(aoa, probes){
+  let bestIdx = 0, bestScore = -1;
+  const limit = Math.min(15, aoa.length);
+  for(let i=0;i<limit;i++){
+    const s = tcrScoreHeaderRow(aoa[i]||[], probes);
+    if(s > bestScore){ bestScore = s; bestIdx = i; }
+  }
+  return {
+    headers: (aoa[bestIdx]||[]).map(v=>String(tcrCellVal(v)).trim()),
+    rows: aoa.slice(bestIdx+1),
+    score: bestScore
+  };
+}
+
+function tcrReadFile(file, probes){
+  const name = file.name.toLowerCase();
+  if(name.endsWith('.csv')){
+    return new Promise((resolve,reject)=>{
+      Papa.parse(file,{
+        header:false, skipEmptyLines:true,
+        complete:r=>resolve(tcrSliceAtHeader(r.data, probes)),
+        error:err=>reject(err)
+      });
+    });
+  }
+  return file.arrayBuffer().then(async buf=>{
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(buf);
+    // A workbook may hold every TCR sheet — pick whichever worksheet's
+    // header row matches the probes best.
+    let best = null;
+    wb.eachSheet(ws=>{
+      const aoa = [];
+      ws.eachRow({includeEmpty:false}, row=>{
+        const vals = Array.isArray(row.values) ? row.values.slice(1) : [];
+        aoa.push(vals.map(tcrCellVal));
+      });
+      if(!aoa.length) return;
+      const sliced = tcrSliceAtHeader(aoa, probes);
+      if(!best || sliced.score > best.score) best = sliced;
+    });
+    if(!best) throw new Error('No readable worksheet found');
+    return best;
+  });
+}
+
+// ── value coercion ──────────────────────────────────────────────
+
+function tcrExcelSerialToDate(n){
+  // Excel's 1900 system: serial 25569 === 1970-01-01. Serials land on UTC
+  // midnight, so rebuild the same calendar day in local time — otherwise the
+  // day-of-month getters below shift by one in some timezones.
+  const u=new Date(Math.round((n - 25569) * 86400000));
+  return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate(),
+                  u.getUTCHours(), u.getUTCMinutes(), u.getUTCSeconds());
+}
+
+function tcrParseDate(v){
+  const val = tcrCellVal(v);
+  if(val==='' || val===null || val===undefined) return null;
+  if(val instanceof Date) return isNaN(val.getTime()) ? null : val;
+  if(typeof val === 'number' && isFinite(val)) return tcrExcelSerialToDate(val);
+  const s = String(val).trim();
+  if(!s) return null;
+  if(/^\d+(\.\d+)?$/.test(s)) return tcrExcelSerialToDate(parseFloat(s));
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Store names are the join key and they drift in case and punctuation
+// between the two files, so match on a normalized form.
+function tcrNormStore(s){
+  return String(tcrCellVal(s)||'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
+}
+
+// "PS DOOR" is priority; "NOT PS DOOR" / "NON PS DOOR" is not.
+function tcrIsPS(remarks){
+  const s = String(tcrCellVal(remarks)||'').toUpperCase().replace(/[^A-Z]+/g,' ');
+  if(/\bNOT\b|\bNON\b/.test(s)) return false;
+  return /\bPS\b/.test(s);
+}
+
+// The workbook's week headers read "1-7 / 8-14 / 15-21 / 22-30", but its
+// pivots actually filter on Monday–Sunday calendar weeks: for May 2026 that
+// is 1-10 / 11-17 / 18-24 / 25-31, which reproduces its published
+// 36 / 106 / 106 / 163 exactly. Calendar weeks are the default; the literal
+// day-of-month split is kept as an option.
+function tcrWeekBuckets(year, month, mode){
+  const last=new Date(year, month+1, 0).getDate();
+  if(mode==='dom'){
+    return [{start:1,end:7},{start:8,end:14},{start:15,end:21},{start:22,end:last}];
+  }
+  const weeks=[];
+  let cur=null;
+  for(let d=1; d<=last; d++){
+    const dow=new Date(year, month, d).getDay();  // 0 = Sunday, 1 = Monday
+    if(cur===null || dow===1){ cur={start:d,end:d}; weeks.push(cur); }
+    else cur.end=d;
+  }
+  // Collapse to four buckets by absorbing whichever end is a partial week —
+  // that is what the workbook does with the days before the first Monday.
+  while(weeks.length>4){
+    const leadPartial = new Date(year, month, weeks[0].start).getDay()!==1;
+    if(leadPartial){
+      weeks[1].start=weeks[0].start;
+      weeks.shift();
+    } else {
+      weeks[weeks.length-2].end=weeks[weeks.length-1].end;
+      weeks.pop();
+    }
+  }
+  while(weeks.length<4) weeks.push({start:last+1, end:last});  // empty tail bucket
+  return weeks;
+}
+
+function tcrDayToWeek(buckets){
+  const map={};
+  buckets.forEach((b,i)=>{ for(let d=b.start; d<=b.end; d++) map[d]=i; });
+  return map;
+}
+
+const TCR_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// ── build ───────────────────────────────────────────────────────
+
+function tcrBuild(){
+  if(!tcrAuditTable || !tcrStoreTable){
+    showToast('Upload both the audit export and the store database first','error');
+    return;
+  }
+  const month = parseInt(document.getElementById('tcr-month').value,10);
+  const year  = parseInt(document.getElementById('tcr-year').value,10);
+  if(!isFinite(year)){ showToast('Enter a valid year','error'); return; }
+
+  // -- store database --
+  const sh = tcrStoreTable.headers;
+  const cStoreName = tcrFindCol(sh,['STORE NAME','STORENAME']);
+  const cStoreCode = tcrFindCol(sh,['STORE CODE','STORECODE']);
+  const cFms       = tcrFindCol(sh,['FMS ASSIGNED','FMS']);
+  const cAm        = tcrFindCol(sh,['AM','AREA MANAGER']);
+  const cOm        = tcrFindCol(sh,['OM','OPERATIONS MANAGER']);
+  const cArea      = tcrFindCol(sh,['AREA']);
+  const cRemarks   = tcrFindCol(sh,['REMARKS','DOOR TYPE']);
+  const missingS=[];
+  if(cStoreName<0) missingS.push('STORE NAME');
+  if(cFms<0)       missingS.push('FMS ASSIGNED');
+  if(cOm<0)        missingS.push('OM');
+  if(cRemarks<0)   missingS.push('REMARKS');
+  if(missingS.length){
+    showToast('Store database is missing: '+missingS.join(', '),'error');
+    return;
+  }
+
+  const storeByName = new Map();   // normalized name -> store
+  const storeByCode = new Map();
+  const stores = [];
+  tcrStoreTable.rows.forEach(r=>{
+    const name = String(tcrCellVal(r[cStoreName])||'').trim();
+    if(!name) return;
+    const st = {
+      name,
+      norm: tcrNormStore(name),
+      code: cStoreCode>=0 ? String(tcrCellVal(r[cStoreCode])||'').trim() : '',
+      fms:  cFms>=0  ? String(tcrCellVal(r[cFms])||'').trim()  : '',
+      am:   cAm>=0   ? String(tcrCellVal(r[cAm])||'').trim()   : '',
+      om:   cOm>=0   ? String(tcrCellVal(r[cOm])||'').trim()   : '',
+      area: cArea>=0 ? String(tcrCellVal(r[cArea])||'').trim() : '',
+      ps:   tcrIsPS(r[cRemarks])
+    };
+    if(!st.norm) return;
+    stores.push(st);
+    if(!storeByName.has(st.norm)) storeByName.set(st.norm, st);
+    if(st.code && !storeByCode.has(st.code)) storeByCode.set(st.code, st);
+  });
+  if(!stores.length){ showToast('No store rows found in the store database','error'); return; }
+
+  // -- audit export --
+  const ah = tcrAuditTable.headers;
+  const aStoreName = tcrFindCol(ah,['STORE NAME','STORENAME']);
+  const aStoreCode = tcrFindCol(ah,['STORE CODE','STORECODE']);
+  const aDate      = tcrFindCol(ah,['UPLOADED DATE','DATE UPLOADED','SUBMITTED DATE']);
+  const aBy        = tcrFindCol(ah,['UPLOADED BY','UPLOADEDBY','FMS']);
+  const attrib     = document.getElementById('tcr-attrib').value;
+  if(attrib==='uploader' && aBy<0){
+    showToast('Audit export has no UPLOADED BY column — switch to "assigned FMS"','error');
+    return;
+  }
+  if(aStoreName<0 && aStoreCode<0){
+    showToast('Audit export has no STORE NAME or STORE CODE column','error');
+    return;
+  }
+  if(aDate<0){ showToast('Audit export has no UPLOADED DATE column','error'); return; }
+
+  // -- aggregate --
+  // key -> {area, om, am, fms, weeks:[[ps,non] x4], distinct:Set(ps), distinctNon:Set}
+  const agg = new Map();
+  function bucket(area, om, am, fms){
+    const k = [area,om,am,fms].join('|');
+    if(!agg.has(k)){
+      agg.set(k,{
+        area, om, am, fms,
+        weeks:[[0,0],[0,0],[0,0],[0,0]],
+        distinctPs:new Set(), distinctNon:new Set(),
+        targetPs:0, targetNon:0
+      });
+    }
+    return agg.get(k);
+  }
+  // Targets come from the store universe, not from what was visited.
+  stores.forEach(s=>{
+    const b = bucket(s.area, s.om, s.am, s.fms);
+    if(s.ps) b.targetPs++; else b.targetNon++;
+  });
+
+  const weekMode  = document.getElementById('tcr-weekmode').value;
+  const buckets   = tcrWeekBuckets(year, month, weekMode);
+  const dayToWeek = tcrDayToWeek(buckets);
+
+  const unmatched = new Map();  // display name -> count
+  let visitsInPeriod = 0, visitsOutOfPeriod = 0, badDates = 0;
+
+  tcrAuditTable.rows.forEach(r=>{
+    const rawName = aStoreName>=0 ? String(tcrCellVal(r[aStoreName])||'').trim() : '';
+    const rawCode = aStoreCode>=0 ? String(tcrCellVal(r[aStoreCode])||'').trim() : '';
+    if(!rawName && !rawCode) return;
+
+    const d = tcrParseDate(r[aDate]);
+    if(!d){ badDates++; return; }
+    if(d.getFullYear()!==year || d.getMonth()!==month){ visitsOutOfPeriod++; return; }
+
+    let st = rawName ? storeByName.get(tcrNormStore(rawName)) : null;
+    if(!st && rawCode) st = storeByCode.get(rawCode);
+    if(!st){
+      const label = rawName || ('code '+rawCode);
+      unmatched.set(label, (unmatched.get(label)||0)+1);
+      return;
+    }
+
+    visitsInPeriod++;
+    // Targets always belong to the store's assigned FMS. Crediting the
+    // uploader instead reproduces the old workbook, where a stand-in's
+    // visits land in a row with no target of its own (ACH shows "—").
+    const creditFms = (attrib==='uploader' && aBy>=0)
+      ? (String(tcrCellVal(r[aBy])||'').trim() || st.fms)
+      : st.fms;
+    const b = bucket(st.area, st.om, st.am, creditFms);
+    const w = dayToWeek[d.getDate()];
+    if(w===undefined) return;
+    if(st.ps){ b.weeks[w][0]++; b.distinctPs.add(st.norm); }
+    else     { b.weeks[w][1]++; b.distinctNon.add(st.norm); }
+  });
+
+  // -- shape rows --
+  const fmsRows = Array.from(agg.values()).map(b=>{
+    const visitedPs  = b.weeks.reduce((a,w)=>a+w[0],0);
+    const visitedNon = b.weeks.reduce((a,w)=>a+w[1],0);
+    return {
+      area:b.area, om:b.om, am:b.am, fms:b.fms,
+      targetPs:b.targetPs, targetNon:b.targetNon,
+      weeks:b.weeks, visitedPs, visitedNon,
+      compliancePs:b.distinctPs.size, complianceNon:b.distinctNon.size,
+      _dPs:b.distinctPs, _dNon:b.distinctNon
+    };
+  }).sort((x,y)=>
+    (x.area||'').localeCompare(y.area||'') ||
+    (x.om||'').localeCompare(y.om||'')     ||
+    (x.am||'').localeCompare(y.am||'')     ||
+    (x.fms||'').localeCompare(y.fms||'')
+  );
+
+  // Roll FMS rows up to OM. Distinct stores must be unioned, never summed —
+  // the same store can be visited by more than one FMS.
+  const omMap = new Map();
+  fmsRows.forEach(r=>{
+    const k = r.area+'|'+r.om;
+    if(!omMap.has(k)){
+      omMap.set(k,{
+        area:r.area, om:r.om, fmsSet:new Set(),
+        targetPs:0, targetNon:0,
+        weeks:[[0,0],[0,0],[0,0],[0,0]],
+        visitedPs:0, visitedNon:0,
+        _dPs:new Set(), _dNon:new Set()
+      });
+    }
+    const o = omMap.get(k);
+    if(r.fms) o.fmsSet.add(r.fms);
+    o.targetPs  += r.targetPs;
+    o.targetNon += r.targetNon;
+    for(let i=0;i<4;i++){ o.weeks[i][0]+=r.weeks[i][0]; o.weeks[i][1]+=r.weeks[i][1]; }
+    o.visitedPs  += r.visitedPs;
+    o.visitedNon += r.visitedNon;
+    r._dPs.forEach(v=>o._dPs.add(v));
+    r._dNon.forEach(v=>o._dNon.add(v));
+  });
+  const omRows = Array.from(omMap.values()).map(o=>({
+    area:o.area, om:o.om, fmsCount:o.fmsSet.size,
+    targetPs:o.targetPs, targetNon:o.targetNon,
+    weeks:o.weeks, visitedPs:o.visitedPs, visitedNon:o.visitedNon,
+    compliancePs:o._dPs.size, complianceNon:o._dNon.size
+  })).sort((x,y)=>
+    (x.area||'').localeCompare(y.area||'') || (x.om||'').localeCompare(y.om||'')
+  );
+
+  tcrResult = {
+    month, year, buckets, weekMode,
+    monthLabel: TCR_MONTHS[month]+' '+year,
+    omRows, fmsRows,
+    unmatched: Array.from(unmatched.entries()).sort((a,b)=>b[1]-a[1]),
+    stats:{
+      storeCount: stores.length,
+      fmsCount: new Set(stores.map(s=>s.fms).filter(Boolean)).size,
+      visitsInPeriod, visitsOutOfPeriod, badDates,
+      auditRows: tcrAuditTable.rows.length
+    }
+  };
+  tcrRender();
+  showToast('✓ Summary built for '+tcrResult.monthLabel,'success');
+}
+
+// ── render ──────────────────────────────────────────────────────
+
+function tcrScope(){ return document.getElementById('tcr-doorfilter').value; }
+function tcrShowPs()  { return tcrScope()!=='nonps'; }
+function tcrShowNon() { return tcrScope()!=='ps'; }
+
+function tcrPct(hit, target){
+  if(!target) return null;
+  return hit/target;
+}
+function tcrPctCell(v){
+  if(v===null) return '<td class="pct" style="color:var(--text3)">—</td>';
+  const cls = v>=0.95 ? 'tcr-pct-hi' : (v>=0.80 ? 'tcr-pct-mid' : 'tcr-pct-lo');
+  return '<td class="pct '+cls+'">'+(v*100).toFixed(1)+'%</td>';
+}
+function tcrNumCell(n, divider){
+  return '<td class="num'+(n===0?' zero':'')+(divider?' divider':'')+'">'+n+'</td>';
+}
+function tcrEsc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function tcrWeekLabels(){
+  const mon=TCR_MONTHS[tcrResult.month].slice(0,3).toUpperCase();
+  return tcrResult.buckets.map(b=>
+    b.start>b.end ? mon+' —' : mon+' '+b.start+'-'+b.end
+  );
+}
+
+function tcrRenderTable(el, rows, level){
+  const ps=tcrShowPs(), non=tcrShowNon();
+  const wl=tcrWeekLabels();
+  const idCols = level==='om' ? ['AREA','OM','TOTAL FMSes'] : ['AREA','OM','AM','FMS ASSIGNED'];
+  const perWeek = (ps?1:0)+(non?1:0);
+
+  let h1='<thead><tr>';
+  idCols.forEach(c=>h1+='<th rowspan="2" class="grp">'+c+'</th>');
+  h1+='<th colspan="'+perWeek+'" class="grp">TARGET</th>';
+  wl.forEach(w=>h1+='<th colspan="'+perWeek+'" class="grp">'+w+'</th>');
+  h1+='<th colspan="'+perWeek+'" class="grp">TOTAL VISITED</th>';
+  h1+='<th colspan="'+perWeek+'" class="grp divider">ACH %</th>';
+  h1+='<th colspan="'+perWeek+'" class="grp">WITH COMPLIANCE</th>';
+  h1+='<th colspan="'+perWeek+'" class="grp">COMPLIANCE ACH %</th>';
+  h1+='</tr><tr>';
+  const sub=(divider)=>{
+    let s='';
+    if(ps)  s+='<th'+(divider&&!non?' class="divider"':'')+'>PS</th>';
+    if(non) s+='<th'+(divider?' class="divider"':'')+'>NON PS</th>';
+    return s;
+  };
+  h1+=sub(); wl.forEach(()=>h1+=sub()); h1+=sub(); h1+=sub(true); h1+=sub(); h1+=sub();
+  h1+='</tr></thead>';
+
+  const total={targetPs:0,targetNon:0,weeks:[[0,0],[0,0],[0,0],[0,0]],visitedPs:0,visitedNon:0,compliancePs:0,complianceNon:0,fmsCount:0};
+  let body='<tbody>';
+  rows.forEach(r=>{
+    body+='<tr>';
+    body+='<td class="txt">'+tcrEsc(r.area)+'</td>';
+    body+='<td class="txt">'+tcrEsc(r.om)+'</td>';
+    if(level==='om'){ body+='<td class="num">'+r.fmsCount+'</td>'; total.fmsCount+=r.fmsCount; }
+    else { body+='<td class="txt">'+tcrEsc(r.am)+'</td><td class="txt">'+tcrEsc(r.fms)+'</td>'; }
+
+    if(ps)  body+=tcrNumCell(r.targetPs);
+    if(non) body+=tcrNumCell(r.targetNon);
+    for(let i=0;i<4;i++){
+      if(ps)  body+=tcrNumCell(r.weeks[i][0]);
+      if(non) body+=tcrNumCell(r.weeks[i][1]);
+    }
+    if(ps)  body+=tcrNumCell(r.visitedPs);
+    if(non) body+=tcrNumCell(r.visitedNon);
+    if(ps)  body+=tcrPctCell(tcrPct(r.visitedPs, r.targetPs));
+    if(non) body+=tcrPctCell(tcrPct(r.visitedNon, r.targetNon));
+    if(ps)  body+=tcrNumCell(r.compliancePs);
+    if(non) body+=tcrNumCell(r.complianceNon);
+    if(ps)  body+=tcrPctCell(tcrPct(r.compliancePs, r.targetPs));
+    if(non) body+=tcrPctCell(tcrPct(r.complianceNon, r.targetNon));
+    body+='</tr>';
+
+    total.targetPs+=r.targetPs; total.targetNon+=r.targetNon;
+    for(let i=0;i<4;i++){ total.weeks[i][0]+=r.weeks[i][0]; total.weeks[i][1]+=r.weeks[i][1]; }
+    total.visitedPs+=r.visitedPs; total.visitedNon+=r.visitedNon;
+    total.compliancePs+=r.compliancePs; total.complianceNon+=r.complianceNon;
+  });
+
+  body+='<tr class="total-row">';
+  body+='<td class="txt">GRAND TOTAL</td><td></td>';
+  if(level==='om') body+='<td class="num">'+total.fmsCount+'</td>';
+  else body+='<td></td><td></td>';
+  if(ps)  body+=tcrNumCell(total.targetPs);
+  if(non) body+=tcrNumCell(total.targetNon);
+  for(let i=0;i<4;i++){
+    if(ps)  body+=tcrNumCell(total.weeks[i][0]);
+    if(non) body+=tcrNumCell(total.weeks[i][1]);
+  }
+  if(ps)  body+=tcrNumCell(total.visitedPs);
+  if(non) body+=tcrNumCell(total.visitedNon);
+  if(ps)  body+=tcrPctCell(tcrPct(total.visitedPs, total.targetPs));
+  if(non) body+=tcrPctCell(tcrPct(total.visitedNon, total.targetNon));
+  if(ps)  body+=tcrNumCell(total.compliancePs);
+  if(non) body+=tcrNumCell(total.complianceNon);
+  if(ps)  body+=tcrPctCell(tcrPct(total.compliancePs, total.targetPs));
+  if(non) body+=tcrPctCell(tcrPct(total.complianceNon, total.targetNon));
+  body+='</tr></tbody>';
+
+  el.innerHTML = h1 + body;
+  return total;
+}
+
+function tcrRender(){
+  if(!tcrResult) return;
+  document.getElementById('tcr-empty').style.display='none';
+  document.getElementById('tcr-results').style.display='flex';
+
+  const total = tcrRenderTable(document.getElementById('tcr-tbl-om'), tcrResult.omRows, 'om');
+  tcrRenderTable(document.getElementById('tcr-tbl-fms'), tcrResult.fmsRows, 'fms');
+
+  const s = tcrResult.stats;
+  const ps = tcrShowPs(), non = tcrShowNon();
+  const visitAch = tcrPct(
+    (ps?total.visitedPs:0)+(non?total.visitedNon:0),
+    (ps?total.targetPs:0)+(non?total.targetNon:0)
+  );
+  const compAch = tcrPct(
+    (ps?total.compliancePs:0)+(non?total.complianceNon:0),
+    (ps?total.targetPs:0)+(non?total.targetNon:0)
+  );
+  const fmt=v=>v===null?'—':(v*100).toFixed(1)+'%';
+
+  let stats='';
+  stats+='<div class="tcr-stat a"><div class="tcr-stat-label">Period</div><div class="tcr-stat-value" style="font-size:18px">'+tcrResult.monthLabel+'</div><div class="tcr-stat-sub">'+s.visitsInPeriod+' visits counted</div></div>';
+  stats+='<div class="tcr-stat b"><div class="tcr-stat-label">Doors visited</div><div class="tcr-stat-value">'+fmt(visitAch)+'</div><div class="tcr-stat-sub">'+((ps?total.visitedPs:0)+(non?total.visitedNon:0))+' / '+((ps?total.targetPs:0)+(non?total.targetNon:0))+'</div></div>';
+  stats+='<div class="tcr-stat c"><div class="tcr-stat-label">Store compliance</div><div class="tcr-stat-value">'+fmt(compAch)+'</div><div class="tcr-stat-sub">distinct stores</div></div>';
+  stats+='<div class="tcr-stat d"><div class="tcr-stat-label">Coverage</div><div class="tcr-stat-value">'+tcrResult.omRows.length+'</div><div class="tcr-stat-sub">OMs · '+s.fmsCount+' FMSes · '+s.storeCount+' stores</div></div>';
+  if(tcrResult.unmatched.length){
+    const n=tcrResult.unmatched.reduce((a,x)=>a+x[1],0);
+    stats+='<div class="tcr-stat warn"><div class="tcr-stat-label">Unmatched visits</div><div class="tcr-stat-value">'+n+'</div><div class="tcr-stat-sub">'+tcrResult.unmatched.length+' store names</div></div>';
+  }
+  document.getElementById('tcr-stats').innerHTML=stats;
+
+  // Unmatched stores are the failure mode worth shouting about: they look
+  // identical to a store nobody visited.
+  const warnWrap=document.getElementById('tcr-warn-wrap');
+  let warn='';
+  if(tcrResult.unmatched.length){
+    const shown=tcrResult.unmatched.slice(0,12);
+    warn+='<div class="tcr-warn"><div class="tcr-warn-title">⚠️ '+tcrResult.unmatched.length+' store name(s) in the audit export are not in the store database</div>';
+    warn+='<p>These visits were <b>excluded</b> from every number above. The store database sets the targets, so an unmatched visit silently looks the same as a store nobody went to. Fix the spelling in either file and rebuild.</p><ul>';
+    shown.forEach(([name,count])=>{ warn+='<li>'+tcrEsc(name)+' <span style="color:var(--text3)">— '+count+' visit'+(count>1?'s':'')+'</span></li>'; });
+    warn+='</ul>';
+    if(tcrResult.unmatched.length>shown.length) warn+='<div class="tcr-warn-more">…and '+(tcrResult.unmatched.length-shown.length)+' more — see the UNMATCHED sheet in the full workbook export.</div>';
+    warn+='</div>';
+  }
+  if(s.visitsOutOfPeriod || s.badDates){
+    warn+='<div class="tcr-warn" style="border-left-color:var(--accent3);border-color:rgba(249,115,22,.35)"><div class="tcr-warn-title" style="color:var(--accent3)">ℹ️ Rows skipped</div><p>';
+    if(s.visitsOutOfPeriod) warn+='<b>'+s.visitsOutOfPeriod+'</b> visit(s) fell outside '+tcrResult.monthLabel+'. ';
+    if(s.badDates) warn+='<b>'+s.badDates+'</b> row(s) had an unreadable upload date. ';
+    warn+='Counted '+s.visitsInPeriod+' of '+s.auditRows+' audit rows.</p></div>';
+  }
+  warnWrap.innerHTML=warn;
+}
+
+// ── export ──────────────────────────────────────────────────────
+
+function tcrSheetAoa(rows, level){
+  const ps=tcrShowPs(), non=tcrShowNon();
+  const wl=tcrWeekLabels();
+  const head=[];
+  if(level==='om') head.push('AREA','OM','TOTAL FMSes');
+  else head.push('AREA','OM','AM','FMS ASSIGNED');
+  const pair=(prefix)=>{
+    if(ps)  head.push(prefix+' PS');
+    if(non) head.push(prefix+' NON PS');
+  };
+  pair('TARGET');
+  wl.forEach(w=>pair(w));
+  pair('TOTAL VISITED');
+  pair('ACH %');
+  pair('WITH COMPLIANCE');
+  pair('COMPLIANCE ACH %');
+
+  const body=rows.map(r=>{
+    const o=[];
+    if(level==='om') o.push(r.area, r.om, r.fmsCount);
+    else o.push(r.area, r.om, r.am, r.fms);
+    if(ps)  o.push(r.targetPs);
+    if(non) o.push(r.targetNon);
+    for(let i=0;i<4;i++){
+      if(ps)  o.push(r.weeks[i][0]);
+      if(non) o.push(r.weeks[i][1]);
+    }
+    if(ps)  o.push(r.visitedPs);
+    if(non) o.push(r.visitedNon);
+    if(ps)  o.push(r.targetPs ? r.visitedPs/r.targetPs : null);
+    if(non) o.push(r.targetNon ? r.visitedNon/r.targetNon : null);
+    if(ps)  o.push(r.compliancePs);
+    if(non) o.push(r.complianceNon);
+    if(ps)  o.push(r.targetPs ? r.compliancePs/r.targetPs : null);
+    if(non) o.push(r.targetNon ? r.complianceNon/r.targetNon : null);
+    return o;
+  });
+
+  // Grand total mirrors the on-screen row.
+  const t=new Array(head.length).fill(null);
+  t[0]='GRAND TOTAL';
+  const sumAt=(idx)=>body.reduce((a,r)=>a+(typeof r[idx]==='number'?r[idx]:0),0);
+  const idStart = level==='om' ? 3 : 4;
+  if(level==='om') t[2]=sumAt(2);
+  for(let i=idStart;i<head.length;i++){
+    if(head[i].indexOf('ACH %')>=0) continue;
+    t[i]=sumAt(i);
+  }
+  for(let i=idStart;i<head.length;i++){
+    if(head[i].indexOf('ACH %')<0) continue;
+    const isPsCol = head[i].endsWith(' PS') && !head[i].endsWith('NON PS');
+    const tgtIdx = head.indexOf(isPsCol ? 'TARGET PS' : 'TARGET NON PS');
+    const srcLabel = head[i].indexOf('COMPLIANCE')>=0
+      ? (isPsCol ? 'WITH COMPLIANCE PS' : 'WITH COMPLIANCE NON PS')
+      : (isPsCol ? 'TOTAL VISITED PS'   : 'TOTAL VISITED NON PS');
+    const srcIdx = head.indexOf(srcLabel);
+    const tgt = tgtIdx>=0 ? t[tgtIdx] : 0;
+    t[i] = (tgt && srcIdx>=0) ? t[srcIdx]/tgt : null;
+  }
+  return {head, body, total:t};
+}
+
+function tcrStyleSheet(ws, head, nRows){
+  ws.columns = head.map((h,i)=>({width: Math.max(String(h).length, i<4?18:9)+2}));
+  styleHeaderRow(ws, 1, head.length);
+  // Percent columns as real percentages, not text.
+  head.forEach((h,i)=>{
+    if(h.indexOf('ACH %')<0) return;
+    for(let r=2;r<=nRows+2;r++){
+      const cell=ws.getRow(r).getCell(i+1);
+      if(typeof cell.value==='number') cell.numFmt='0.0%';
+    }
+  });
+  const totalRow=ws.getRow(nRows+2);
+  totalRow.font=Object.assign({}, totalRow.font, {bold:true});
+  applyDataBorders(ws);
+}
+
+async function tcrExport(which){
+  if(!tcrResult){ showToast('Build the summary first','error'); return; }
+  const wb=new ExcelJS.Workbook();
+  const stamp=TCR_MONTHS[tcrResult.month].toUpperCase()+'_'+tcrResult.year;
+
+  const addSheet=(name, rows, level)=>{
+    const {head, body, total}=tcrSheetAoa(rows, level);
+    const ws=wb.addWorksheet(name);
+    ws.addRow(head);
+    body.forEach(r=>ws.addRow(r));
+    ws.addRow(total);
+    tcrStyleSheet(ws, head, body.length);
+  };
+
+  if(which==='om' || which==='all')  addSheet('PER OM',  tcrResult.omRows,  'om');
+  if(which==='fms'|| which==='all')  addSheet('PER FMS', tcrResult.fmsRows, 'fms');
+
+  if(which==='all' && tcrResult.unmatched.length){
+    const ws=wb.addWorksheet('UNMATCHED');
+    ws.addRow(['STORE NAME IN AUDIT EXPORT','VISITS','NOTE']);
+    tcrResult.unmatched.forEach(([name,count])=>
+      ws.addRow([name, count, 'Not found in store database — excluded from all totals']));
+    ws.columns=[{width:46},{width:10},{width:60}];
+    styleHeaderRow(ws,1,3);
+    applyDataBorders(ws);
+  }
+
+  const suffix = which==='om' ? 'PER_OM' : (which==='fms' ? 'PER_FMS' : 'FULL');
+  const buffer=await wb.xlsx.writeBuffer();
+  downloadXlsxBuffer(buffer, 'TCR_SUMMARY_'+stamp+'_'+suffix+'.xlsx');
+  showToast('✓ XLSX downloaded','success');
+}
+
+// ── wiring ──────────────────────────────────────────────────────
+
+const TCR_AUDIT_PROBES=['STORE NAME','UPLOADED DATE','UPLOADED BY','PARENT FORM ID','STORE CODE','KPI MONTH'];
+const TCR_STORE_PROBES=['STORE NAME','FMS ASSIGNED','OM','AM','AREA','REMARKS','STORE CODE'];
+
+function tcrWireDrop(dropId, inputId, fileLabelId, probes, assign){
+  const drop=document.getElementById(dropId);
+  const input=document.getElementById(inputId);
+  const label=document.getElementById(fileLabelId);
+
+  const load=(file)=>{
+    if(!file) return;
+    label.textContent='Reading…';
+    tcrReadFile(file, probes).then(tbl=>{
+      if(!tbl || !tbl.headers.length){ throw new Error('No header row found'); }
+      assign(tbl);
+      drop.classList.add('loaded');
+      label.textContent='✓ '+file.name+' — '+tbl.rows.length+' rows';
+      tcrAutoDetectPeriod();
+      showToast('Loaded '+file.name,'success');
+    }).catch(err=>{
+      drop.classList.remove('loaded');
+      label.textContent='';
+      assign(null);
+      showToast('Could not read '+file.name+': '+(err.message||err),'error');
+    });
+  };
+
+  drop.addEventListener('click', ()=>input.click());
+  input.addEventListener('change', e=>load(e.target.files[0]));
+  drop.addEventListener('dragover', e=>{e.preventDefault();drop.classList.add('drag-over');});
+  drop.addEventListener('dragleave', ()=>drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e=>{
+    e.preventDefault();
+    drop.classList.remove('drag-over');
+    load(e.dataTransfer.files[0]);
+  });
+}
+
+// Picks the month/year that most audit rows fall in, so the user rarely
+// has to touch the selector.
+function tcrAutoDetectPeriod(){
+  if(!tcrAuditTable) return;
+  const aDate=tcrFindCol(tcrAuditTable.headers,['UPLOADED DATE','DATE UPLOADED','SUBMITTED DATE']);
+  if(aDate<0) return;
+  const tally=new Map();
+  tcrAuditTable.rows.forEach(r=>{
+    const d=tcrParseDate(r[aDate]);
+    if(!d) return;
+    const k=d.getFullYear()+'-'+d.getMonth();
+    tally.set(k,(tally.get(k)||0)+1);
+  });
+  if(!tally.size) return;
+  let bestK=null, bestN=-1;
+  tally.forEach((n,k)=>{ if(n>bestN){bestN=n;bestK=k;} });
+  const [y,m]=bestK.split('-').map(Number);
+  document.getElementById('tcr-year').value=y;
+  document.getElementById('tcr-month').value=m;
+}
+
+function tcrReset(){
+  tcrAuditTable=null; tcrStoreTable=null; tcrResult=null;
+  ['tcr-drop-audit','tcr-drop-store'].forEach(id=>document.getElementById(id).classList.remove('loaded'));
+  ['tcr-file-audit','tcr-file-store'].forEach(id=>document.getElementById(id).textContent='');
+  ['tcr-input-audit','tcr-input-store'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('tcr-warn-wrap').innerHTML='';
+  document.getElementById('tcr-results').style.display='none';
+  document.getElementById('tcr-empty').style.display='block';
+  showToast('TCR Summary reset','success');
+}
+
+tcrWireDrop('tcr-drop-audit','tcr-input-audit','tcr-file-audit',TCR_AUDIT_PROBES,t=>{tcrAuditTable=t;});
+tcrWireDrop('tcr-drop-store','tcr-input-store','tcr-file-store',TCR_STORE_PROBES,t=>{tcrStoreTable=t;});
+
+document.getElementById('tcr-build').addEventListener('click', tcrBuild);
+document.getElementById('tcr-reset').addEventListener('click', tcrReset);
+// Door scope only changes what is displayed; attribution changes the maths,
+// so it needs a full rebuild.
+document.getElementById('tcr-doorfilter').addEventListener('change', ()=>{ if(tcrResult) tcrRender(); });
+document.getElementById('tcr-attrib').addEventListener('change', ()=>{ if(tcrResult) tcrBuild(); });
+document.getElementById('tcr-weekmode').addEventListener('change', ()=>{ if(tcrResult) tcrBuild(); });
+document.getElementById('tcr-export-om').addEventListener('click', ()=>tcrExport('om'));
+document.getElementById('tcr-export-fms').addEventListener('click', ()=>tcrExport('fms'));
+document.getElementById('tcr-export-all').addEventListener('click', ()=>tcrExport('all'));
+
+(function tcrInitPeriod(){
+  const now=new Date();
+  document.getElementById('tcr-year').value=now.getFullYear();
+  document.getElementById('tcr-month').value=now.getMonth();
+})();
 
 // ═══════════════════════════════════════════════════════════════
 //  TAB SWITCHING
