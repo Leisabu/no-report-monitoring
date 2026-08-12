@@ -1029,7 +1029,9 @@ td.df-row-bad{background:rgba(244,63,94,0.2)!important}
 .btn-sample:hover{background:rgba(249,115,22,.08);transform:translateY(-1px)}
 
 /* ── TCR SUMMARY TAB ── */
-.tcr-scope{padding:24px 32px 60px;display:flex;flex-direction:column;gap:20px}
+/* A tab inside the Database Formatter group — .main already supplies the
+   page padding, so this only lays out its own children. */
+.tcr-scope{display:flex;flex-direction:column;gap:20px}
 .tcr-head{display:flex;align-items:center;gap:14px}
 .tcr-head-icon{font-size:26px;line-height:1}
 .tcr-head h1{font-family:'DM Sans',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.3px}
@@ -1156,6 +1158,10 @@ td.df-row-bad{background:rgba(244,63,94,0.2)!important}
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="7.5" width="3.5" height="5" stroke="currentColor" stroke-width="1.2"/><rect x="5.75" y="4.5" width="3.5" height="8" stroke="currentColor" stroke-width="1.2"/><rect x="9" y="2" width="3.5" height="10.5" stroke="currentColor" stroke-width="1.2"/></svg>
         <span>Multi Stores</span>
       </button>
+      <button class="nav-dropdown-item nav-dropdown-subitem" data-tab="tab-tcr">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M4 10V7M7 10V4.5M10 10V8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span>TCR Summary</span>
+      </button>
     </div>
   </div>
   <div class="nav-dropdown-sep"></div>
@@ -1199,11 +1205,6 @@ td.df-row-bad{background:rgba(244,63,94,0.2)!important}
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M1.5 5.2h11" stroke="currentColor" stroke-width="1.3"/><path d="M4.3 1.5v-.8M9.7 1.5v-.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 7.6h1.6M7.2 7.6h1.6M4 10h1.6M7.2 10h1.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
     <span>Date Formatter</span>
   </button>
-  <div class="nav-dropdown-sep"></div>
-  <button class="nav-dropdown-item" data-tab="tab-tcr">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M4 10V7M7 10V4.5M10 10V8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-    <span>TCR Summary</span>
-  </button>
 </div>
 
 <nav class="tab-bar" id="formatter-tab-bar">
@@ -1211,6 +1212,7 @@ td.df-row-bad{background:rgba(244,63,94,0.2)!important}
   <button class="tab-btn" data-tab="tab-supervisors">Per Supervisors</button>
   <button class="tab-btn" data-tab="tab-perstore">Per Store</button>
   <button class="tab-btn" data-tab="tab-multistore">Multi Stores</button>
+  <button class="tab-btn" data-tab="tab-tcr">TCR Summary</button>
 </nav>
 
 <nav class="tab-bar" id="dbchk-tab-bar" style="display:none">
@@ -1627,6 +1629,118 @@ td.df-row-bad{background:rgba(244,63,94,0.2)!important}
 
 </div><!-- end tab-multistore -->
 
+<div id="tab-tcr" class="tab-panel">
+<div class="tcr-scope">
+
+  <div class="tcr-head">
+    <div class="tcr-head-icon">📊</div>
+    <div>
+      <h1>TCR Summary Builder</h1>
+      <p>Builds the monthly compliance summary — per OM and per FMS — straight from the audit export. No copying between sheets.</p>
+    </div>
+  </div>
+
+  <!-- Step 1: inputs -->
+  <div class="tcr-inputs">
+    <div class="tcr-drop" id="tcr-drop-audit">
+      <div class="tcr-drop-icon">📥</div>
+      <div class="tcr-drop-title">1 · Audit export</div>
+      <div class="tcr-drop-sub">MY TEAM SUMMARY REPORT<br>one row per store visit &nbsp;·&nbsp; .xlsx or .csv</div>
+      <div class="tcr-drop-file" id="tcr-file-audit"></div>
+      <input type="file" id="tcr-input-audit" accept=".xlsx,.xls,.csv">
+    </div>
+    <div class="tcr-drop" id="tcr-drop-store">
+      <div class="tcr-drop-icon">🏬</div>
+      <div class="tcr-drop-title">2 · Store database</div>
+      <div class="tcr-drop-sub">STORE DATABASE<br>one row per store — sets the targets &nbsp;·&nbsp; .xlsx or .csv</div>
+      <div class="tcr-drop-file" id="tcr-file-store"></div>
+      <input type="file" id="tcr-input-store" accept=".xlsx,.xls,.csv">
+    </div>
+  </div>
+
+  <!-- Step 2: controls -->
+  <div class="tcr-controls">
+    <div class="tcr-field">
+      <label for="tcr-month">Month</label>
+      <select id="tcr-month">
+        <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+        <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+        <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+        <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+      </select>
+    </div>
+    <div class="tcr-field">
+      <label for="tcr-year">Year</label>
+      <input type="number" id="tcr-year" min="2000" max="2100" step="1">
+    </div>
+    <div class="tcr-field">
+      <label for="tcr-weekmode">Week split</label>
+      <select id="tcr-weekmode">
+        <option value="cal">Calendar weeks (Mon–Sun)</option>
+        <option value="dom">Day of month (1-7, 8-14…)</option>
+      </select>
+    </div>
+    <div class="tcr-field">
+      <label for="tcr-attrib">Credit visit to</label>
+      <select id="tcr-attrib">
+        <option value="assigned">Store's assigned FMS</option>
+        <option value="uploader">Whoever uploaded it</option>
+      </select>
+    </div>
+    <div class="tcr-field">
+      <label for="tcr-doorfilter">Door scope</label>
+      <select id="tcr-doorfilter">
+        <option value="both">PS + NON PS</option>
+        <option value="ps">PS doors only</option>
+        <option value="nonps">NON PS doors only</option>
+      </select>
+    </div>
+    <div class="tcr-ctl-spacer">
+      <button class="btn btn-primary" id="tcr-build">⚙️ Build Summary</button>
+      <button class="btn btn-danger" id="tcr-reset">🔄 Reset</button>
+    </div>
+  </div>
+
+  <div id="tcr-warn-wrap"></div>
+
+  <!-- Step 3: results -->
+  <div id="tcr-results" style="display:none;flex-direction:column;gap:20px">
+
+    <div class="tcr-stats" id="tcr-stats"></div>
+
+    <div class="tcr-block">
+      <div class="tcr-block-head">
+        <h3>Per OM</h3>
+        <span class="tcr-block-note">Weekly columns count <b>visits</b>. Compliance columns count <b>distinct stores</b> for the month.</span>
+        <div class="tcr-block-actions">
+          <button class="btn btn-secondary" id="tcr-export-om">⬇️ Export XLSX</button>
+        </div>
+      </div>
+      <div class="tcr-tbl-scroll"><table class="tcr-tbl" id="tcr-tbl-om"></table></div>
+    </div>
+
+    <div class="tcr-block">
+      <div class="tcr-block-head">
+        <h3>Per FMS</h3>
+        <span class="tcr-block-note">Same measures, broken down to AREA → OM → AM → FMS.</span>
+        <div class="tcr-block-actions">
+          <button class="btn btn-secondary" id="tcr-export-fms">⬇️ Export XLSX</button>
+          <button class="btn btn-primary" id="tcr-export-all">📗 Export Full Workbook</button>
+        </div>
+      </div>
+      <div class="tcr-tbl-scroll"><table class="tcr-tbl" id="tcr-tbl-fms"></table></div>
+    </div>
+
+  </div>
+
+  <div class="tcr-empty" id="tcr-empty">
+    <span class="ico">📊</span>
+    Upload both files above, then press <b>Build Summary</b>.
+  </div>
+
+</div>
+</div><!-- end tab-tcr -->
+
 <div id="tab-dbchk-database" class="tab-panel">
 
   <div class="card">
@@ -2002,118 +2116,6 @@ td.df-row-bad{background:rgba(244,63,94,0.2)!important}
   </div>
 
 </div><!-- end tab-dateformatter -->
-
-<div id="tab-tcr" class="tab-panel">
-<div class="tcr-scope">
-
-  <div class="tcr-head">
-    <div class="tcr-head-icon">📊</div>
-    <div>
-      <h1>TCR Summary Builder</h1>
-      <p>Builds the monthly compliance summary — per OM and per FMS — straight from the audit export. No copying between sheets.</p>
-    </div>
-  </div>
-
-  <!-- Step 1: inputs -->
-  <div class="tcr-inputs">
-    <div class="tcr-drop" id="tcr-drop-audit">
-      <div class="tcr-drop-icon">📥</div>
-      <div class="tcr-drop-title">1 · Audit export</div>
-      <div class="tcr-drop-sub">MY TEAM SUMMARY REPORT<br>one row per store visit &nbsp;·&nbsp; .xlsx or .csv</div>
-      <div class="tcr-drop-file" id="tcr-file-audit"></div>
-      <input type="file" id="tcr-input-audit" accept=".xlsx,.xls,.csv">
-    </div>
-    <div class="tcr-drop" id="tcr-drop-store">
-      <div class="tcr-drop-icon">🏬</div>
-      <div class="tcr-drop-title">2 · Store database</div>
-      <div class="tcr-drop-sub">STORE DATABASE<br>one row per store — sets the targets &nbsp;·&nbsp; .xlsx or .csv</div>
-      <div class="tcr-drop-file" id="tcr-file-store"></div>
-      <input type="file" id="tcr-input-store" accept=".xlsx,.xls,.csv">
-    </div>
-  </div>
-
-  <!-- Step 2: controls -->
-  <div class="tcr-controls">
-    <div class="tcr-field">
-      <label for="tcr-month">Month</label>
-      <select id="tcr-month">
-        <option value="0">January</option><option value="1">February</option><option value="2">March</option>
-        <option value="3">April</option><option value="4">May</option><option value="5">June</option>
-        <option value="6">July</option><option value="7">August</option><option value="8">September</option>
-        <option value="9">October</option><option value="10">November</option><option value="11">December</option>
-      </select>
-    </div>
-    <div class="tcr-field">
-      <label for="tcr-year">Year</label>
-      <input type="number" id="tcr-year" min="2000" max="2100" step="1">
-    </div>
-    <div class="tcr-field">
-      <label for="tcr-weekmode">Week split</label>
-      <select id="tcr-weekmode">
-        <option value="cal">Calendar weeks (Mon–Sun)</option>
-        <option value="dom">Day of month (1-7, 8-14…)</option>
-      </select>
-    </div>
-    <div class="tcr-field">
-      <label for="tcr-attrib">Credit visit to</label>
-      <select id="tcr-attrib">
-        <option value="assigned">Store's assigned FMS</option>
-        <option value="uploader">Whoever uploaded it</option>
-      </select>
-    </div>
-    <div class="tcr-field">
-      <label for="tcr-doorfilter">Door scope</label>
-      <select id="tcr-doorfilter">
-        <option value="both">PS + NON PS</option>
-        <option value="ps">PS doors only</option>
-        <option value="nonps">NON PS doors only</option>
-      </select>
-    </div>
-    <div class="tcr-ctl-spacer">
-      <button class="btn btn-primary" id="tcr-build">⚙️ Build Summary</button>
-      <button class="btn btn-danger" id="tcr-reset">🔄 Reset</button>
-    </div>
-  </div>
-
-  <div id="tcr-warn-wrap"></div>
-
-  <!-- Step 3: results -->
-  <div id="tcr-results" style="display:none;flex-direction:column;gap:20px">
-
-    <div class="tcr-stats" id="tcr-stats"></div>
-
-    <div class="tcr-block">
-      <div class="tcr-block-head">
-        <h3>Per OM</h3>
-        <span class="tcr-block-note">Weekly columns count <b>visits</b>. Compliance columns count <b>distinct stores</b> for the month.</span>
-        <div class="tcr-block-actions">
-          <button class="btn btn-secondary" id="tcr-export-om">⬇️ Export XLSX</button>
-        </div>
-      </div>
-      <div class="tcr-tbl-scroll"><table class="tcr-tbl" id="tcr-tbl-om"></table></div>
-    </div>
-
-    <div class="tcr-block">
-      <div class="tcr-block-head">
-        <h3>Per FMS</h3>
-        <span class="tcr-block-note">Same measures, broken down to AREA → OM → AM → FMS.</span>
-        <div class="tcr-block-actions">
-          <button class="btn btn-secondary" id="tcr-export-fms">⬇️ Export XLSX</button>
-          <button class="btn btn-primary" id="tcr-export-all">📗 Export Full Workbook</button>
-        </div>
-      </div>
-      <div class="tcr-tbl-scroll"><table class="tcr-tbl" id="tcr-tbl-fms"></table></div>
-    </div>
-
-  </div>
-
-  <div class="tcr-empty" id="tcr-empty">
-    <span class="ico">📊</span>
-    Upload both files above, then press <b>Build Summary</b>.
-  </div>
-
-</div>
-</div><!-- end tab-tcr -->
 
 </div><!-- .main -->
 <div id="toast"></div>
@@ -3734,7 +3736,7 @@ document.getElementById('tcr-export-all').addEventListener('click', ()=>tcrExpor
 // ═══════════════════════════════════════════════════════════════
 //  TAB SWITCHING
 // ═══════════════════════════════════════════════════════════════
-const FORMATTER_GROUP_TABS=['tab-format','tab-supervisors','tab-perstore','tab-multistore'];
+const FORMATTER_GROUP_TABS=['tab-format','tab-supervisors','tab-perstore','tab-multistore','tab-tcr'];
 const DBCHK_GROUP_TABS=['tab-dbchk-database','tab-dbchk-supervisors','tab-dbchk-perstore','tab-dbchk-multistore'];
 function switchTab(tabId){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tabId));
