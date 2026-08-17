@@ -7195,7 +7195,10 @@ async function downloadImage(index, e) {
 
   try {
     const canvas = await getCardCanvas(index);
-    triggerDownload(canvas, g);
+    const how = await triggerDownload(canvas, g);
+    if (how === 'opened') showAlert('info', nrmSaveMessage(how, 1));
+  } catch (err) {
+    showAlert('error', `❌ Could not save image: ${err.message}`);
   } finally {
     btn.innerHTML = orig;
     btn.disabled = false;
@@ -7217,6 +7220,10 @@ async function downloadAllCardImages() {
   document.body.appendChild(toast);
 
   try {
+    // Render everything first, then hand the whole set over at once. Mobile
+    // browsers block repeated automatic downloads, so a single share sheet
+    // with all the files is the only thing that works there.
+    const items = [];
     for (let i = 0; i < visibleWrappers.length; i++) {
       const wrapper = visibleWrappers[i];
       // Extract index from the copyBtn id inside this wrapper
@@ -7227,11 +7234,17 @@ async function downloadAllCardImages() {
       toast.textContent = `Generating ${i + 1} of ${visibleWrappers.length} — ${g.supervisor}…`;
       btn.innerHTML = `⬇️ ${i + 1}/${visibleWrappers.length}`;
       const canvas = await getCardCanvas(idx);
-      triggerDownload(canvas, g);
-      await new Promise(r => setTimeout(r, 400));
+      const name = g.supervisor.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_');
+      items.push({
+        blob: await nrmCanvasToBlob(canvas),
+        filename: `${name}_NO_Report_${nrmToday()}.png`
+      });
     }
-    toast.textContent = `✅ All ${visibleWrappers.length} images downloaded!`;
-    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+    if (!items.length) throw new Error('no cards could be rendered');
+    toast.textContent = `Saving ${items.length}…`;
+    const how = await nrmSaveImages(items, 'NO Report cards');
+    toast.textContent = nrmSaveMessage(how, items.length);
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 4000);
   } catch (err) {
     toast.textContent = `❌ Error: ${err.message}`;
     setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
@@ -7241,13 +7254,103 @@ async function downloadAllCardImages() {
   }
 }
 
-// ito ang nag papagana pag pinindot yung download button, nagsesave ng image sa device
-function triggerDownload(canvas, g) {
-  const name = g.supervisor.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_');
-  const a = document.createElement('a');
-  a.href = canvas.toDataURL('image/png');
-  a.download = `${name}_NO_Report_${dateSlug}.png`;
+// ─── Saving images on laptop AND mobile ───────────────────
+// Dati: a.href = canvas.toDataURL(); a.download = ...; a.click()
+// Hindi ito gumagana sa iOS — binabalewala ng Safari ang download attribute
+// kapag data: URL ang href, kaya walang na-sasave. Ngayon: Blob muna, tapos
+// piliin kung anong paraan ang kaya ng device.
+
+function nrmToday() { return new Date().toISOString().slice(0, 10); }
+
+function nrmCanvasToBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      b => b ? resolve(b) : reject(new Error('the image could not be rendered')),
+      'image/png'
+    );
+  });
+}
+
+// iOS exposes the download attribute but never acts on it, so treat
+// touch-primary Apple devices as not supporting it. (iPadOS reports itself as
+// MacIntel, hence the maxTouchPoints check.)
+const NRM_IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const NRM_CAN_DOWNLOAD = ('download' in document.createElement('a')) && !NRM_IS_IOS;
+
+function nrmDownloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a);   // Firefox ignores the click unless it is in the document
   a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+// Last resort: show the images so the user can long-press → Save Image.
+function nrmOpenBlobs(files) {
+  files.forEach(f => {
+    const url = URL.createObjectURL(f);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  });
+}
+
+// items: [{ blob, filename }]
+// returns 'shared' | 'downloaded' | 'opened' | 'cancelled'
+async function nrmSaveImages(items, shareTitle) {
+  const files = items.map(i => new File([i.blob], i.filename, { type: 'image/png' }));
+
+  // 1. Mobile — the native share sheet is the only reliable route to the photo
+  //    library ("Save Image" on iOS, "Download" on Android), and it takes every
+  //    file in one go, which matters because mobile browsers block repeated
+  //    automatic downloads.
+  if (navigator.canShare && navigator.canShare({ files })) {
+    try {
+      await navigator.share({ files, title: shareTitle || 'NO Report' });
+      return 'shared';
+    } catch (err) {
+      if (err && err.name === 'AbortError') return 'cancelled';
+      // NotAllowedError means the user gesture expired while rendering —
+      // fall through to the routes below rather than failing outright.
+    }
+  }
+
+  // 2. Laptop / desktop
+  if (NRM_CAN_DOWNLOAD) {
+    for (let i = 0; i < files.length; i++) {
+      nrmDownloadBlob(files[i], files[i].name);
+      if (i < files.length - 1) await new Promise(r => setTimeout(r, 400));
+    }
+    return 'downloaded';
+  }
+
+  // 3. Neither available
+  nrmOpenBlobs(files);
+  return 'opened';
+}
+
+function nrmSaveMessage(how, n) {
+  const s = n === 1 ? 'image' : `all ${n} images`;
+  switch (how) {
+    case 'shared':    return `✅ Saved — pick "Save Image" to send ${s} to your photos`;
+    case 'downloaded':return `✅ ${n === 1 ? 'Image' : `All ${n} images`} downloaded!`;
+    case 'opened':    return `📷 Opened ${s} — long-press and choose "Save Image"`;
+    case 'cancelled': return `Cancelled — nothing was saved`;
+    default:          return `✅ Done`;
+  }
+}
+
+// ito ang nag papagana pag pinindot yung download button, nagsesave ng image sa device
+async function triggerDownload(canvas, g) {
+  const name = g.supervisor.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_');
+  const blob = await nrmCanvasToBlob(canvas);
+  // dateSlug used to be referenced here without ever being declared, which made
+  // this throw a ReferenceError on every platform.
+  return nrmSaveImages(
+    [{ blob, filename: `${name}_NO_Report_${nrmToday()}.png` }],
+    `${g.supervisor} — NO Report`
+  );
 }
 
 // ─── AM Breakdown Panel ───────────────────────────────────
@@ -7475,20 +7578,23 @@ async function downloadAMImage(idx, e) {
   btn.disabled = true;
   try {
     const canvas = await getAMCanvas(idx);
-    triggerAMDownload(canvas, window._amList[idx]);
+    const how = await triggerAMDownload(canvas, window._amList[idx]);
+    if (how === 'opened') showAlert('info', nrmSaveMessage(how, 1));
+  } catch (err) {
+    showAlert('error', `❌ Could not save image: ${err.message}`);
   } finally {
     btn.innerHTML = orig; btn.disabled = false;
   }
 }
 
 // para sa pag download ng AM summary bilang image file
-function triggerAMDownload(canvas, entry) {
-  const dateSlug = new Date().toISOString().slice(0,10);
+async function triggerAMDownload(canvas, entry) {
   const name = entry.am.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_');
-  const a = document.createElement('a');
-  a.href = canvas.toDataURL('image/png');
-  a.download = `${name}_AM_Summary_${dateSlug}.png`;
-  a.click();
+  const blob = await nrmCanvasToBlob(canvas);
+  return nrmSaveImages(
+    [{ blob, filename: `${name}_AM_Summary_${nrmToday()}.png` }],
+    `${entry.am} — AM Summary`
+  );
 }
 
 async function downloadAllAMImages() {
@@ -7504,16 +7610,23 @@ async function downloadAllAMImages() {
   document.body.appendChild(toast);
 
   try {
+    // Render first, save once — see downloadAllCardImages for why.
+    const items = [];
     for (let i = 0; i < list.length; i++) {
       toast.textContent = `Generating ${i + 1} of ${list.length} — ${list[i].am}…`;
       btn.innerHTML = `⬇️ ${i + 1}/${list.length}`;
       const canvas = await getAMCanvas(i);
-      triggerAMDownload(canvas, list[i]);
-      // Small gap so browser doesn't block multiple downloads
-      await new Promise(r => setTimeout(r, 400));
+      const name = list[i].am.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_');
+      items.push({
+        blob: await nrmCanvasToBlob(canvas),
+        filename: `${name}_AM_Summary_${nrmToday()}.png`
+      });
     }
-    toast.textContent = `✅ All ${list.length} images downloaded!`;
-    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+    if (!items.length) throw new Error('no summaries could be rendered');
+    toast.textContent = `Saving ${items.length}…`;
+    const how = await nrmSaveImages(items, 'AM Summaries');
+    toast.textContent = nrmSaveMessage(how, items.length);
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 4000);
   } catch (err) {
     toast.textContent = `❌ Error: ${err.message}`;
     setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
