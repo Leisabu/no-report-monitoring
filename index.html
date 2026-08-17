@@ -2146,18 +2146,84 @@ function copyTSV(data, cols){
       showToast('✓ Copied','success');
     });
 }
-function exportCSV(data, cols, labels, filename){
+// ═══════════════════════════════════════════════════════════════
+//  SAVING FILES — laptop AND mobile
+//  The download attribute is the only route on a laptop, and no route at
+//  all on iOS: Safari advertises support and then does nothing, so a tap
+//  produces no file and no error. Every save goes through appSaveFiles(),
+//  which picks whichever route the device actually has.
+// ═══════════════════════════════════════════════════════════════
+
+// iPadOS reports itself as MacIntel, hence the touch-points check.
+const APP_IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const APP_CAN_DOWNLOAD = ('download' in document.createElement('a')) && !APP_IS_IOS;
+
+function appDownloadBlob(blob, filename){
+  const url=URL.createObjectURL(blob);
+  const a=Object.assign(document.createElement('a'),{href:url,download:filename});
+  document.body.appendChild(a);   // Firefox ignores the click unless it is in the document
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 60000);
+}
+
+// items: [{ blob, filename }]
+// returns 'shared' | 'downloaded' | 'opened' | 'cancelled'
+async function appSaveFiles(items, shareTitle){
+  const files=items.map(i=>new File([i.blob], i.filename, {type:i.blob.type||'application/octet-stream'}));
+
+  // 1. Mobile — the native share sheet reaches Photos / Files / Drive, and
+  //    takes every file at once, which matters because mobile browsers block
+  //    repeated automatic downloads.
+  if(navigator.canShare && navigator.canShare({files})){
+    try{
+      await navigator.share({files, title:shareTitle||'Export'});
+      return 'shared';
+    }catch(err){
+      if(err && err.name==='AbortError') return 'cancelled';
+      // NotAllowedError = the user gesture expired while generating the file;
+      // fall through rather than failing outright.
+    }
+  }
+
+  // 2. Laptop / desktop
+  if(APP_CAN_DOWNLOAD){
+    for(let i=0;i<files.length;i++){
+      appDownloadBlob(files[i], files[i].name);
+      if(i<files.length-1) await new Promise(r=>setTimeout(r,400));
+    }
+    return 'downloaded';
+  }
+
+  // 3. Neither available — show it so it can be saved by hand.
+  files.forEach(f=>{
+    const url=URL.createObjectURL(f);
+    window.open(url,'_blank');
+    setTimeout(()=>URL.revokeObjectURL(url), 60000);
+  });
+  return 'opened';
+}
+
+// Result text for a toast. `what` is a noun like 'CSV' or 'Workbook'.
+function appSaveMessage(how, what, n){
+  const many = n>1;
+  switch(how){
+    case 'shared':    return `✓ Choose where to save ${many?`the ${n} files`:`the ${what}`}`;
+    case 'downloaded':return `✓ ${many?`All ${n} files`:what} downloaded`;
+    case 'opened':    return `Opened in a new tab — long-press or right-click to save`;
+    case 'cancelled': return `Cancelled — nothing was saved`;
+    default:          return `✓ Done`;
+  }
+}
+
+async function exportCSV(data, cols, labels, filename){
   const hdr=labels.map(ce).join(',');
   const lines=data.map(row=>cols.map(c=>ce(row[c]||'')).join(','));
   const csv='\uFEFF'+[hdr,...lines].join('\r\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=Object.assign(document.createElement('a'),{href:url,download:filename});
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 100);
-  showToast('✓ CSV downloaded','success');
+  const how=await appSaveFiles([{blob, filename}], filename);
+  showToast(appSaveMessage(how,'CSV',1), how==='cancelled'?'warn':'success');
 }
 // "Blue, Accent 1" from the default Office theme — used to fill column-header cells
 const HEADER_FILL_ARGB='FF4472C4';
@@ -2167,15 +2233,15 @@ const DATA_BORDER_ARGB='FF000000';
 const STORE_FILL_ARGB='FFED7D31';
 const STORE_FONT_ARGB='FF000000';
 
-// Triggers a browser download for an xlsx ArrayBuffer produced by ExcelJS
-function downloadXlsxBuffer(buffer, filename){
+// Saves an xlsx ArrayBuffer produced by ExcelJS. Its dozen call sites already
+// show their own "downloaded" toast synchronously, which is right on a laptop
+// but wrong on a phone — so correct the wording only when the file did not go
+// down the download route.
+async function downloadXlsxBuffer(buffer, filename){
   const blob=new Blob([buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const url=URL.createObjectURL(blob);
-  const a=Object.assign(document.createElement('a'),{href:url,download:filename});
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 100);
+  const how=await appSaveFiles([{blob, filename}], filename);
+  if(how!=='downloaded') showToast(appSaveMessage(how,'Workbook',1), how==='cancelled'?'warn':'success');
+  return how;
 }
 
 // Fills a header row's populated cells (1-based ExcelJS row number, spanning
@@ -6233,14 +6299,20 @@ async function dcCopyScreenshot(){
       }
     }
 
-    // Strategy 2: silent auto-download fallback — same pattern as triggerDownload()
+    // Strategy 2: save the file. Goes through appSaveFiles so this works on
+    // phones too — the old path used a data: URL with a download attribute,
+    // which iOS ignores entirely.
     const stampSlug=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-    const a=document.createElement('a');
-    a.href=finalCanvas.toDataURL('image/png');
-    a.download=`Distance_Checker_${stampSlug}.png`;
-    a.click();
-    label.textContent='Saved!';
-    dcSetShotStatus("Clipboard image copy isn't supported when opening files directly — this is normal. Image saved to your Downloads folder.");
+    const blob=await new Promise((res,rej)=>finalCanvas.toBlob(
+      b=>b?res(b):rej(new Error('the screenshot could not be rendered')),'image/png'));
+    const how=await appSaveFiles(
+      [{blob, filename:`Distance_Checker_${stampSlug}.png`}], 'Distance Checker');
+    label.textContent = how==='cancelled' ? origLabel : 'Saved!';
+    dcSetShotStatus(
+      how==='shared'    ? 'Choose where to save the screenshot.' :
+      how==='opened'    ? 'Screenshot opened in a new tab — long-press or right-click to save it.' :
+      how==='cancelled' ? 'Cancelled — nothing was saved.' :
+      "Clipboard image copy isn't supported when opening files directly — this is normal. Image saved to your Downloads folder.");
     setTimeout(()=>{ label.textContent=origLabel; },2500);
 
   }catch(err){
@@ -6775,17 +6847,11 @@ function initImageToText(){
     navigator.clipboard.writeText(ittResultText.value).then(()=>showToast('Copied to clipboard','success'));
   });
 
-  document.getElementById('ittDownloadBtn').addEventListener('click',()=>{
+  document.getElementById('ittDownloadBtn').addEventListener('click',async()=>{
     if(!ittResultText.value){ showToast('Nothing to download yet','warn'); return; }
     const blob=new Blob([ittResultText.value],{type:'text/plain'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download='extracted-text.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const how=await appSaveFiles([{blob, filename:'extracted-text.txt'}], 'Extracted text');
+    showToast(appSaveMessage(how,'Text file',1), how==='cancelled'?'warn':'success');
   });
 
   window.addEventListener('beforeunload',()=>{
@@ -7271,63 +7337,10 @@ function nrmCanvasToBlob(canvas) {
   });
 }
 
-// iOS exposes the download attribute but never acts on it, so treat
-// touch-primary Apple devices as not supporting it. (iPadOS reports itself as
-// MacIntel, hence the maxTouchPoints check.)
-const NRM_IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent)
-  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const NRM_CAN_DOWNLOAD = ('download' in document.createElement('a')) && !NRM_IS_IOS;
-
-function nrmDownloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
-  document.body.appendChild(a);   // Firefox ignores the click unless it is in the document
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
-}
-
-// Last resort: show the images so the user can long-press → Save Image.
-function nrmOpenBlobs(files) {
-  files.forEach(f => {
-    const url = URL.createObjectURL(f);
-    window.open(url, '_blank');
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  });
-}
-
-// items: [{ blob, filename }]
-// returns 'shared' | 'downloaded' | 'opened' | 'cancelled'
-async function nrmSaveImages(items, shareTitle) {
-  const files = items.map(i => new File([i.blob], i.filename, { type: 'image/png' }));
-
-  // 1. Mobile — the native share sheet is the only reliable route to the photo
-  //    library ("Save Image" on iOS, "Download" on Android), and it takes every
-  //    file in one go, which matters because mobile browsers block repeated
-  //    automatic downloads.
-  if (navigator.canShare && navigator.canShare({ files })) {
-    try {
-      await navigator.share({ files, title: shareTitle || 'NO Report' });
-      return 'shared';
-    } catch (err) {
-      if (err && err.name === 'AbortError') return 'cancelled';
-      // NotAllowedError means the user gesture expired while rendering —
-      // fall through to the routes below rather than failing outright.
-    }
-  }
-
-  // 2. Laptop / desktop
-  if (NRM_CAN_DOWNLOAD) {
-    for (let i = 0; i < files.length; i++) {
-      nrmDownloadBlob(files[i], files[i].name);
-      if (i < files.length - 1) await new Promise(r => setTimeout(r, 400));
-    }
-    return 'downloaded';
-  }
-
-  // 3. Neither available
-  nrmOpenBlobs(files);
-  return 'opened';
+// Routing lives in appSaveFiles() so every tab saves the same way; this only
+// adds the image-specific wording.
+function nrmSaveImages(items, shareTitle) {
+  return appSaveFiles(items, shareTitle);
 }
 
 function nrmSaveMessage(how, n) {
