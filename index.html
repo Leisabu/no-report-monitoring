@@ -351,6 +351,30 @@ details summary::-webkit-details-marker{display:none}
 #toast.show{transform:translateY(0);opacity:1}
 #toast.error{border-left-color:var(--danger)}#toast.warn{border-left-color:var(--accent3)}
 
+/* ── EMBEDDED-BROWSER WARNING ── */
+/* Facebook/Messenger/Instagram/Line/WeChat's in-app browsers frequently
+   cripple navigator.share, ClipboardItem and even plain downloads with no
+   error at all — this banner tells the user why copy/download "randomly"
+   fails there instead of leaving them guessing. */
+.app-embedded-banner{display:flex;align-items:center;gap:10px;background:#78350f;color:#fef3c7;padding:9px 20px;font-family:'DM Sans',sans-serif;font-size:12.5px;line-height:1.5}
+body.light-mode .app-embedded-banner{background:#fef3c7;color:#78350f}
+.app-embedded-banner strong{white-space:nowrap}
+.app-embedded-banner-close{margin-left:auto;background:transparent;border:none;color:inherit;opacity:.7;cursor:pointer;font-size:15px;padding:2px 6px;flex-shrink:0}
+.app-embedded-banner-close:hover{opacity:1}
+
+/* ── IMAGE SAVE FALLBACK (share + download both unavailable) ── */
+.app-img-fallback-overlay{display:flex;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:24px}
+.app-img-fallback-panel{background:var(--surface);border:1px solid var(--border2);border-radius:14px;max-width:520px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.app-img-fallback-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.app-img-fallback-header span{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text)}
+.app-img-fallback-close{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);width:28px;height:28px;flex-shrink:0;cursor:pointer;font-size:14px;line-height:1}
+.app-img-fallback-close:hover{background:var(--border)}
+.app-img-fallback-hint{padding:10px 18px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border);font-family:'DM Sans',sans-serif}
+.app-img-fallback-body{overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:16px}
+.app-img-fallback-item{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface2)}
+.app-img-fallback-item figcaption{padding:7px 12px;font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3)}
+.app-img-fallback-item img{display:block;width:100%;height:auto;-webkit-touch-callout:default;user-select:auto}
+
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--text3)}
 .btn-theme{background:var(--surface2);color:var(--text2);border:1px solid var(--border2);padding:6px 13px;font-size:11px}
@@ -2159,6 +2183,27 @@ const APP_IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent)
   || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const APP_CAN_DOWNLOAD = ('download' in document.createElement('a')) && !APP_IS_IOS;
 
+// Facebook/Messenger/Instagram/Line/WeChat/Twitter open links in their own
+// stripped-down in-app WebView rather than real Chrome/Safari. Those
+// WebViews routinely advertise navigator.share / ClipboardItem / download
+// support and then silently do nothing when called — no exception, no
+// console error, just a dead tap. That's indistinguishable from a bug in
+// this app unless we tell the user what's actually going on. This can't
+// catch every embedded browser (Viber in particular mostly opens a real
+// system browser tab), only the handful with recognizable UA tokens.
+const APP_IS_EMBEDDED_BROWSER = /FBAN|FBAV|FB_IAB|Instagram|Line\/|MicroMessenger|Twitter/i.test(navigator.userAgent);
+
+function appShowEmbeddedBrowserBanner(){
+  if(!APP_IS_EMBEDDED_BROWSER || document.getElementById('appEmbeddedBanner')) return;
+  const bar=document.createElement('div');
+  bar.id='appEmbeddedBanner';
+  bar.className='app-embedded-banner';
+  bar.innerHTML=`<strong>⚠️ Heads up:</strong><span>You appear to be viewing this inside an app's built-in browser (Facebook, Messenger, Instagram, etc). Copy/download often fails silently there — tap the ••• or share icon and choose "Open in Chrome/Safari" for reliable results.</span><button type="button" class="app-embedded-banner-close" aria-label="Dismiss">✕</button>`;
+  bar.querySelector('.app-embedded-banner-close').addEventListener('click', ()=>bar.remove());
+  document.body.insertBefore(bar, document.body.firstChild);
+}
+appShowEmbeddedBrowserBanner();
+
 function appDownloadBlob(blob, filename){
   const url=URL.createObjectURL(blob);
   const a=Object.assign(document.createElement('a'),{href:url,download:filename});
@@ -2166,6 +2211,58 @@ function appDownloadBlob(blob, filename){
   a.click();
   document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url), 60000);
+}
+
+// Last-resort fallback when neither the share sheet nor a plain download
+// worked (mainly iOS Safari when navigator.share rejects, or an embedded
+// browser blocking everything). Used to be window.open(blobURL) — but
+// window.open() needs the same live user-gesture that share/clipboard do,
+// and by this point in the flow (render, then a failed share attempt) that
+// gesture has usually already expired, so iOS Safari silently blocks it as
+// a popup. The code still returned 'opened' either way, so the app claimed
+// success while nothing actually happened. Rendering the image directly in
+// the page instead needs no permission at all — it's just an <img> tag —
+// so it works even inside broken in-app browsers. The user long-presses
+// the image to save/copy it, which is the normal mobile save gesture.
+function appShowImageFallback(items, shareTitle){
+  const overlay=document.createElement('div');
+  overlay.className='app-img-fallback-overlay';
+  overlay.innerHTML=`
+    <div class="app-img-fallback-panel">
+      <div class="app-img-fallback-header">
+        <span>${escHtml(shareTitle||'Save Image')}</span>
+        <button type="button" class="app-img-fallback-close" aria-label="Close">✕</button>
+      </div>
+      <div class="app-img-fallback-hint">Press and hold each image below, then choose "Save Image" / "Download image".</div>
+      <div class="app-img-fallback-body"></div>
+    </div>`;
+  const body=overlay.querySelector('.app-img-fallback-body');
+  const urls=[];
+  items.forEach(it=>{
+    const url=URL.createObjectURL(it.blob);
+    urls.push(url);
+    const fig=document.createElement('figure');
+    fig.className='app-img-fallback-item';
+    const cap=document.createElement('figcaption');
+    cap.textContent=it.filename;
+    const img=new Image();
+    img.src=url;
+    img.alt=it.filename;
+    img.draggable=false;
+    fig.appendChild(cap);
+    fig.appendChild(img);
+    body.appendChild(fig);
+  });
+  const cleanup=()=>{
+    urls.forEach(u=>URL.revokeObjectURL(u));
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey=e=>{ if(e.key==='Escape') cleanup(); };
+  overlay.querySelector('.app-img-fallback-close').addEventListener('click', cleanup);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) cleanup(); });
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(overlay);
 }
 
 // items: [{ blob, filename }]
@@ -2182,8 +2279,10 @@ async function appSaveFiles(items, shareTitle){
       return 'shared';
     }catch(err){
       if(err && err.name==='AbortError') return 'cancelled';
-      // NotAllowedError = the user gesture expired while generating the file;
-      // fall through rather than failing outright.
+      // NotAllowedError = the user gesture expired while generating the file
+      // (very common on iOS if rendering took a while) — fall through
+      // rather than failing outright.
+      console.warn('navigator.share failed, falling back:', err && err.message);
     }
   }
 
@@ -2196,12 +2295,8 @@ async function appSaveFiles(items, shareTitle){
     return 'downloaded';
   }
 
-  // 3. Neither available — show it so it can be saved by hand.
-  files.forEach(f=>{
-    const url=URL.createObjectURL(f);
-    window.open(url,'_blank');
-    setTimeout(()=>URL.revokeObjectURL(url), 60000);
-  });
+  // 3. Neither available — show it in-page so it can be saved by hand.
+  appShowImageFallback(items, shareTitle);
   return 'opened';
 }
 
@@ -2211,7 +2306,7 @@ function appSaveMessage(how, what, n){
   switch(how){
     case 'shared':    return `✓ Choose where to save ${many?`the ${n} files`:`the ${what}`}`;
     case 'downloaded':return `✓ ${many?`All ${n} files`:what} downloaded`;
-    case 'opened':    return `Opened in a new tab — long-press or right-click to save`;
+    case 'opened':    return `Shown below — long-press or right-click to save`;
     case 'cancelled': return `Cancelled — nothing was saved`;
     default:          return `✓ Done`;
   }
@@ -6277,15 +6372,22 @@ async function dcCopyScreenshot(){
   label.textContent='Generating…';
   dcSetShotStatus('');
 
-  try{
-    const mapCanvas=await dcCaptureMapCanvas();
-    const finalCanvas=dcComposeShotCanvas(pA,pB,mapCanvas);
+  // Kick off the map capture immediately; both the clipboard write and the
+  // fallback download share this one promise so the map is only captured
+  // once.
+  const finalCanvasPromise = dcCaptureMapCanvas().then(mapCanvas => dcComposeShotCanvas(pA,pB,mapCanvas));
 
-    // Strategy 1: ClipboardItem with a Promise — same pattern as the No Report
-    // tab's copyImage(), keeps the user gesture alive in Chrome so the
-    // document-focus restriction is bypassed.
+  try{
+    // Strategy 1: ClipboardItem with a Promise — same pattern as the No
+    // Report tab's copyImage(). navigator.clipboard.write() must be called
+    // synchronously off the click (no await before it) to stay inside the
+    // browser's short user-gesture window; the map capture above is often
+    // the slowest render in this app (real network tiles), so awaiting it
+    // first before calling write() — as this used to do — meant the
+    // gesture had frequently already expired by the time write() ran,
+    // especially on mobile.
     if(navigator.clipboard && window.ClipboardItem){
-      const blobPromise=new Promise(res=>finalCanvas.toBlob(res,'image/png'));
+      const blobPromise=finalCanvasPromise.then(finalCanvas=>new Promise(res=>finalCanvas.toBlob(res,'image/png')));
       try{
         await navigator.clipboard.write([ new ClipboardItem({'image/png':blobPromise}) ]);
         btn.classList.add('dc-shot-done');
@@ -6301,7 +6403,9 @@ async function dcCopyScreenshot(){
 
     // Strategy 2: save the file. Goes through appSaveFiles so this works on
     // phones too — the old path used a data: URL with a download attribute,
-    // which iOS ignores entirely.
+    // which iOS ignores entirely. Reuses the already-captured canvas
+    // instead of capturing the map again.
+    const finalCanvas=await finalCanvasPromise;
     const stampSlug=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
     const blob=await new Promise((res,rej)=>finalCanvas.toBlob(
       b=>b?res(b):rej(new Error('the screenshot could not be rendered')),'image/png'));
@@ -6310,7 +6414,7 @@ async function dcCopyScreenshot(){
     label.textContent = how==='cancelled' ? origLabel : 'Saved!';
     dcSetShotStatus(
       how==='shared'    ? 'Choose where to save the screenshot.' :
-      how==='opened'    ? 'Screenshot opened in a new tab — long-press or right-click to save it.' :
+      how==='opened'    ? 'Screenshot shown below — long-press or right-click to save it.' :
       how==='cancelled' ? 'Cancelled — nothing was saved.' :
       "Clipboard image copy isn't supported when opening files directly — this is normal. Image saved to your Downloads folder.");
     setTimeout(()=>{ label.textContent=origLabel; },2500);
@@ -7195,20 +7299,33 @@ async function getCardCanvas(index) {
   clone.style.overflow = 'hidden';
   container.appendChild(clone);
 
-  // Wait a tick for layout
-  await new Promise(r => setTimeout(r, 80));
+  // container.removeChild lives in `finally` so a failed/aborted html2canvas
+  // render (tainted canvas, slow font/image load, etc.) can never leave the
+  // clone stuck in the DOM. It used to only run on the success path, which
+  // let orphaned clones pile up in #renderContainer every time a render
+  // failed — the whole page got measurably slower over a session because of
+  // it.
+  try {
+    // Wait for one full layout+paint pass. Was a flat setTimeout(80) — a
+    // fixed guess that always burned 80ms regardless of whether it was
+    // needed, eating into the short window mobile browsers give
+    // navigator.share()/clipboard.write() after the user's tap. A double
+    // rAF guarantees the browser has actually laid out and painted the
+    // clone (single rAF can fire before paint) while typically costing far
+    // less than 80ms.
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-  const canvas = await html2canvas(clone, {
-    scale: 2,
-    useCORS: true,
-    logging: false,
-    backgroundColor: '#ffffff',
-    width: 480,
-    windowWidth: 480
-  });
-
-  container.removeChild(clone);
-  return canvas;
+    return await html2canvas(clone, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      width: 480,
+      windowWidth: 480
+    });
+  } finally {
+    container.removeChild(clone);
+  }
 }
 
 async function copyImage(index) {
@@ -7217,13 +7334,23 @@ async function copyImage(index) {
   btn.innerHTML = '<span class="spinner"></span> Generating…';
   btn.disabled = true;
 
-  try {
-    const canvas = await getCardCanvas(index);
+  // Kick off the render once; both the clipboard write and the fallback
+  // download below share this same promise so the card is only rendered a
+  // single time.
+  const canvasPromise = getCardCanvas(index);
 
-    // Strategy 1: ClipboardItem with a Promise — keeps the user gesture alive in Chrome
-    // so the document-focus restriction is bypassed.
+  try {
+    // Strategy 1: ClipboardItem with a Promise. navigator.clipboard.write()
+    // itself MUST be called synchronously off the click (no await before
+    // it) — that's what keeps this inside the browser's short user-gesture
+    // window. The PNG blob it's holding is allowed to resolve later, once
+    // html2canvas actually finishes. The previous version awaited the
+    // render first and only called write() afterwards, so by the time it
+    // ran, the gesture window had often already expired — write() would
+    // throw and silently fall back to a download. That's why copying felt
+    // random: it depended on how long the render happened to take.
     if (navigator.clipboard && window.ClipboardItem) {
-      const blobPromise = new Promise(res => canvas.toBlob(res, 'image/png'));
+      const blobPromise = canvasPromise.then(canvas => new Promise(res => canvas.toBlob(res, 'image/png')));
       try {
         await navigator.clipboard.write([
           new ClipboardItem({ 'image/png': blobPromise })
@@ -7238,8 +7365,10 @@ async function copyImage(index) {
       }
     }
 
-    // Strategy 2: Silent auto-download fallback — no scary error shown
-    triggerDownload(canvas, allGroups[index]);
+    // Strategy 2: Silent auto-download fallback — no scary error shown.
+    // Reuses the already-rendered canvas instead of rendering again.
+    const canvas = await canvasPromise;
+    await triggerDownload(canvas, allGroups[index]);
     btn.innerHTML = '⬇️ Saved!';
     setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2500);
     showAlert('info', '💾 Image saved to your Downloads folder. (Clipboard image copy isn\'t supported when opening files directly — this is normal.)');
@@ -7544,13 +7673,17 @@ async function getAMCanvas(idx) {
   const card = buildAMCardEl(entry);
   card.style.position = 'absolute';
   container.appendChild(card);
-  await new Promise(r => setTimeout(r, 80));
-  const canvas = await html2canvas(card, {
-    scale: 2, useCORS: true, logging: false,
-    backgroundColor: '#ffffff', width: 440, windowWidth: 440
-  });
-  container.removeChild(card);
-  return canvas;
+  // See getCardCanvas() — removeChild must run even when html2canvas throws,
+  // or the offscreen container silently accumulates orphaned cards.
+  try {
+    await new Promise(r => setTimeout(r, 80));
+    return await html2canvas(card, {
+      scale: 2, useCORS: true, logging: false,
+      backgroundColor: '#ffffff', width: 440, windowWidth: 440
+    });
+  } finally {
+    container.removeChild(card);
+  }
 }
 
 async function copyAMImage(idx, e) {
@@ -7560,10 +7693,14 @@ async function copyAMImage(idx, e) {
   btn.innerHTML = '<span class="spinner" style="border-top-color:#0891b2;border-color:rgba(8,145,178,0.3);"></span>';
   btn.disabled = true;
 
+  // See copyImage() — render once, write() must fire synchronously off the
+  // click so the browser still counts it as user-initiated once the render
+  // finishes.
+  const canvasPromise = getAMCanvas(idx);
+
   try {
-    const canvas = await getAMCanvas(idx);
     if (navigator.clipboard && window.ClipboardItem) {
-      const blobPromise = new Promise(res => canvas.toBlob(res, 'image/png'));
+      const blobPromise = canvasPromise.then(canvas => new Promise(res => canvas.toBlob(res, 'image/png')));
       try {
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]);
         btn.innerHTML = '✅ Copied!';
@@ -7572,8 +7709,9 @@ async function copyAMImage(idx, e) {
         return;
       } catch { /* fall through */ }
     }
-    // Fallback: download
-    triggerAMDownload(canvas, window._amList[idx]);
+    // Fallback: download — reuses the same rendered canvas
+    const canvas = await canvasPromise;
+    await triggerAMDownload(canvas, window._amList[idx]);
     btn.innerHTML = '⬇️ Saved!';
     btn.classList.add('saved');
     setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('saved'); btn.disabled = false; }, 2500);
